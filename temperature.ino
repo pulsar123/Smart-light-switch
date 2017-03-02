@@ -25,11 +25,6 @@ void temperature()
         bad_temp = 1;
         light_state = 0;
         digitalWrite(SSR_PIN, LOW);
-#ifdef USE_LEDS
-#ifdef DEBUG
-        digitalWrite(LED1, HIGH);
-#endif
-#endif
 #ifdef DEBUG
         Serial.println("T>T_MAX! Disabling SSR");
 #endif

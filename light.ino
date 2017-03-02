@@ -10,11 +10,6 @@ void light()
       // Turning off
     {
       digitalWrite(SSR_PIN, LOW);
-#ifdef USE_LEDS
-#ifdef DEBUG
-      digitalWrite(LED1, HIGH);
-#endif      
-#endif      
 #ifdef DEBUG
       Serial.println("SSR off");
 #endif
@@ -23,11 +18,6 @@ void light()
       // Turning on
     {
       digitalWrite(SSR_PIN, HIGH);
-#ifdef USE_LEDS  
-#ifdef DEBUG
-      digitalWrite(LED1, LOW);
-#endif
-#endif      
 #ifdef DEBUG
       Serial.println("SSR on");
 #endif

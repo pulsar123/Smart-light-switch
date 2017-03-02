@@ -41,18 +41,16 @@ void read_switch()
         // Three switch flips in a row, so reversing the Mode:
       {
         // Dumb->smart switch is only allowed if time is known:
-        /* !!!!
-                if (Mode == 1 || knows_time)
-                {
-                  Mode = 1 - Mode;
-                  if (Mode == 1)
-                    instant_check = 1;
-          #ifdef DEBUG
-                  Serial.print("New Mode=");
-                  Serial.println(Mode);
-          #endif
-                }
-        */
+        if (Mode == 1 || knows_time)
+        {
+          Mode = 1 - Mode;
+          if (Mode == 1)
+            instant_check = 1;
+#ifdef DEBUG
+          Serial.print("New Mode=");
+          Serial.println(Mode);
+#endif
+        }
       }
     }
     switch_state = switch_state_temp;

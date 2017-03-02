@@ -1,0 +1,25 @@
+sitemap my_home label="Main Menu"
+{
+
+ Text item=Light1 label="Front light"
+   {
+    Frame
+      {
+       Text item=Light1_alarm visibility=[Light1_alarm==ALARM]
+       Text item=Light1_state
+      }
+    Frame
+      {
+       Switch item=Light1_switch1
+       Text item=Light1_mode
+       Switch item=Light1_switch2 visibility=[Light1_mode==Dumb]
+     }
+    Frame
+     {
+       Text item=Light1_phys
+       Text item=Light1_temp
+       Text item=Light1_left visibility=[Light1_mode==Smart]
+     }
+   }
+
+}

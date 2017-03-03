@@ -30,8 +30,8 @@
 //#define INITIALIZE
 // Only for debugging (will use Serial interface to print messages):
 //#define DEBUG
-// Uncomment to use the two internal LEDs (WiFi status and warning signals)
-#define USE_LEDS
+// Uncomment to use one internal LEDs as WiFi status (the other internal LED will only be used for warning signals)
+//#define WIFI_LED
 
 const long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
 const long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)

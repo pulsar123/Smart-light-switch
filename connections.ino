@@ -6,7 +6,7 @@ void connections()
   {
     WiFi_on = 1;
     // Turning the LED0 on when WiFi is connected:
-#ifdef USE_LEDS  
+#ifdef WIFI_LED
     digitalWrite(LED0, LOW);
 #endif    
 #ifdef DEBUG
@@ -21,7 +21,7 @@ void connections()
     MQTT_on = 0;
     mqtt_init = 1;
     WiFi.begin(ssid, password);
-#ifdef USE_LEDS  
+#ifdef WIFI_LED
     digitalWrite(LED0, HIGH);
 #endif    
 #ifdef DEBUG

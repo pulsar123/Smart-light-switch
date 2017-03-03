@@ -103,19 +103,18 @@ void setup()
   light_state = switch_state; // Initially the light state = physical switch state (dumb mode)
   light_state_old = light_state;
   pinMode(TH_PIN, INPUT);
-#ifdef USE_LEDS
+#ifdef WIFI_LED
   pinMode(LED0, OUTPUT);     // Initialize the BUILTIN_LED pin as an output (WiFi connection indicator)
-  pinMode(LED1, OUTPUT);  // warning indicator (will flash if power cycling is needed)
 #endif
+  pinMode(LED1, OUTPUT);  // warning indicator (will flash if power cycling is needed - if overheated or abused)
   delay(10);
   led0 = HIGH;
   led1 = HIGH;
   digitalWrite(SSR_PIN, switch_state); // Initially the SSR state = physical switch state (dumb mode)
-#ifdef USE_LEDS
+#ifdef WIFI_LED
   digitalWrite(LED0, led0);
-  digitalWrite(LED1, led1);
 #endif
-  //  delay(100);
+  digitalWrite(LED1, led1);
   WiFi.begin(ssid, password);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);

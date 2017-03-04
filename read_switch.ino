@@ -18,6 +18,8 @@ void read_switch()
         {
           switch_abuse = 1;
           Mode = knows_time;
+          if (MQTT_on)
+            client.publish(ROOT"/alarm", "3");
           if (knows_time == 0)
             light_state = 0;
 #ifdef DEBUG

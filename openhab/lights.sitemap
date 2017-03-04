@@ -1,11 +1,10 @@
 sitemap my_home label="Main Menu"
 {
-
  Text item=Light1 label="Front light"
    {
     Frame
       {
-       Text item=Light1_alarm visibility=[Light1_alarm==ALARM]
+       Text item=Light1_alarm visibility=[Light1_alarmv>0]
        Text item=Light1_state
       }
     Frame

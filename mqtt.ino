@@ -9,7 +9,14 @@ void mqtt()
     // Sending:
     if (mqtt_init == 1)
     {
-      client.publish(ROOT"/alarm", "0");
+      if (bad_temp)
+        client.publish(ROOT"/alarm", "1");
+      else if (mqtt_abuse)
+        client.publish(ROOT"/alarm", "2");
+      else if (switch_abuse)
+        client.publish(ROOT"/alarm", "3");
+      else
+        client.publish(ROOT"/alarm", "0");
     }
     if (light_state != light_state_old || mqtt_init == 1)
     {

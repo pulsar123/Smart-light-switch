@@ -9,4 +9,6 @@ Switch Light1_switch2 "Manual switch" <empty> {mqtt=">[broker:light1/switch2:com
 String Light1_phys "Physical switch state" <switch> {mqtt="<[broker:light1/switch_state:state:MAP(onoff.map)]"}
 String Light1_left "Next flip at [%s]" <empty> {mqtt="<[broker:light1/left:state:default]"}
 String Light1_temp "T = [%s   C]" <temperature> {mqtt="<[broker:light1/temp:state:default]"}
-String Light1_alarm "ALARM!" <empty> {mqtt="<[broker:light1/alarm:state:MAP(temp_alarm.map)]"}
+//String Light1_alarm "ALARM!" <empty> {mqtt="<[broker:light1/alarm:state:MAP(temp_alarm.map)]"}
+Number Light1_alarm "[MAP(temp_alarm.map):%s!]" <empty> {mqtt="<[broker:light1/alarm:state:default]"}
+Number Light1_alarmv "[%d]" <empty> {mqtt="<[broker:light1/alarm:state:default]"}

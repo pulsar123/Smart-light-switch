@@ -13,6 +13,8 @@ void callback(char* topic, byte* payload, unsigned int length)
       Mode = knows_time;
       if (knows_time == 0)
         light_state = 0;
+      if (MQTT_on)
+        client.publish(ROOT"/alarm", "2");
 #ifdef DEBUG
       Serial.println("MQTT abuse detected!");
 #endif

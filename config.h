@@ -20,7 +20,7 @@
   ROOT"/light_state"   : the light's state (on/off);
   ROOT"/switch_state"  : the physical switch's state (on/off)
   ROOT"/left"    : hours:minutes left before the next smart flip
-  ROOT"/alarm"   : 1 if exceeded the critical temperature on SSR, 0 otherwise
+  ROOT"/alarm"   : 1 if exceeded the critical temperature on SSR, 2 for MQTT abuse, 3 for phys. switch abuse, 0 otherwise
   ROOT"/temp"    : current / historically maximum SSR temperature in C
 */
 
@@ -36,9 +36,9 @@
 const long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
 const long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)
 const long DT_NTP = 86400000; // Time interval for NTP time re-syncing, ms
-const long DT_DARK = 63000; // How often to do smart mode checking, in ms; better not be integer minutes, to add some randomness at seconds level
+const long DT_DARK = 37000; // How often to do smart mode checking, in ms; better not be integer minutes, to add some randomness at seconds level
 const int DARK_RAN = 11; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in minutes; should be odd for symmetry
-const int DARK_SHIFT = 10; // Constant shift of the smart light on/off times into the darker part of the day (positive for sunset, negative for sunrise), in minutes
+const int DARK_SHIFT = 6; // Constant shift of the smart light on/off times into the darker part of the day (positive for sunset, negative for sunrise), in minutes
 const long DT_TH = 100; // raw temperarture measurement interval, ms
 const int N_T = 10; // average temperature over this many measurements (so the actual temperature is updated every N_T*DT_TH ms)
 const float T_MAX = 50.0; // Maximum allowed SSR temperature (C); if larger, the SSR will be disabled until reboot time, and LED1 will start slowly flashing

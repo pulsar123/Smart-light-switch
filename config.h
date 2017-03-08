@@ -9,11 +9,12 @@
 #include "private.h" //  Make sure you create this file first (see the lines above)
 
 // The root name for MQTT topics:
-#define ROOT "light1"
+#define ROOT "light2"
 /*  MQTT topics:
   Incoming:
   ROOT"/switch1" : switching the mode (0: dumb; 1: smart);
   ROOT"/switch2" : manually switching the light (0: off; 1: on);
+  openhab/start  : optional; if "1" is received (the sign that openhab has just re-started), the switch will re-publish its current state
 
   Outgoing:
   ROOT"/mode"    : the mode (0: dumb; 1: smart);
@@ -21,7 +22,18 @@
   ROOT"/switch_state"  : the physical switch's state (on/off)
   ROOT"/left"    : hours:minutes left before the next smart flip
   ROOT"/alarm"   : 1 if exceeded the critical temperature on SSR, 2 for MQTT abuse, 3 for phys. switch abuse, 0 otherwise
-  ROOT"/temp"    : current / historically maximum SSR temperature in C
+  ROOT"/temp"    : current / historically maximum SSR temperature in C  
+
+  For the "openhab/start" thing to work, one needs to have the OpenHab to publish "1" (followed by "0") in this topic at startup.
+  Under Windows this can be accomplished by adding this line before the last line of openhab.bat file:
+
+  start /b C:\openHAB2\mqtt_start.bat >nul
+
+  and creating a new file mqtt_start.bat with the following content:
+
+  timeout /t 20 /nobreak
+  C:\mosquitto\mosquitto_pub.exe -h 127.0.0.1 -t "openhab/start" -m "1"
+  C:\mosquitto\mosquitto_pub.exe -h 127.0.0.1 -t "openhab/start" -m "0"
 */
 
 
@@ -121,3 +133,5 @@ int switch_count, mqtt_count;
 byte switch_abuse, mqtt_abuse;
 long int on_hours, on_hours_old;
 struct Tmax_struc Tmax;
+byte phys_flip;
+byte mqtt_refresh;

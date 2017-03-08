@@ -2,6 +2,8 @@ void read_switch()
 // Reading the physical switch state, with de-bouncing, and triple-switch command detection.
 // Updates switch_state, light_state, and Mode variables.
 {
+  phys_flip = 0;
+  
   byte switch_state_temp = 1 - digitalRead(SWITCH_PIN);
 
   if (switch_state_temp != switch_state && t - t_switch > DT_DEBOUNCE)
@@ -59,7 +61,12 @@ void read_switch()
     t_switch = t;
     if (Mode == 0)
       // Only in Dumb switch mode, light state reflects the physical switch state:
+    {
       light_state = switch_state;
+      // !!!! An experiment: trying to make the physical switch much more responsive:
+      light();
+      phys_flip = 1;
+    }
   }
 }
 

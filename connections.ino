@@ -46,6 +46,7 @@ void connections()
     {
       client.subscribe(ROOT"/switch1");
       client.subscribe(ROOT"/switch2");
+      client.subscribe("openhab/start");
       MQTT_on = 1;
 #ifdef DEBUG
       Serial.println("MQTT on");

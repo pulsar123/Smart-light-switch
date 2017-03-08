@@ -7,7 +7,7 @@ void mqtt()
     client.loop();
 
     // Sending:
-    if (mqtt_init == 1)
+    if (mqtt_init || mqtt_refresh)
     {
       if (bad_temp)
         client.publish(ROOT"/alarm", "1");
@@ -18,7 +18,7 @@ void mqtt()
       else
         client.publish(ROOT"/alarm", "0");
     }
-    if (light_state != light_state_old || mqtt_init == 1)
+    if (light_state != light_state_old || mqtt_init || mqtt_refresh)
     {
       sprintf(buf, "%d", light_state);
       client.publish(ROOT"/light_state", buf);
@@ -27,7 +27,7 @@ void mqtt()
       Serial.println(light_state);
 #endif
     }
-    if (Mode != Mode_old || mqtt_init == 1)
+    if (Mode != Mode_old || mqtt_init || mqtt_refresh)
     {
       sprintf(buf, "%d", Mode);
       client.publish(ROOT"/mode", buf);
@@ -39,7 +39,7 @@ void mqtt()
       Serial.println(Mode);
 #endif
     }
-    if (switch_state != switch_state_old || mqtt_init == 1)
+    if (switch_state != switch_state_old || mqtt_init || mqtt_refresh)
     {
       sprintf(buf, "%d", switch_state);
       client.publish(ROOT"/switch_state", buf);
@@ -49,5 +49,6 @@ void mqtt()
 #endif
     }
     mqtt_init = 0;
+    mqtt_refresh = 0;
   }
 }

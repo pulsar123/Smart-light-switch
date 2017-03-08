@@ -1,11 +1,12 @@
 void light()
 // Operating the SSR (turningg the lights on/off) based on light_state
 {
-// SSR cannot be controlled if we went over the critical temperature:  
+  // SSR cannot be controlled if we went over the critical temperature:
   if (bad_temp)
     return;
-  
-  if (light_state != light_state_old)
+
+  if (light_state != light_state_old && phys_flip == 0)
+  {
     if (light_state == 0)
       // Turning off
     {
@@ -22,6 +23,7 @@ void light()
       Serial.println("SSR on");
 #endif
     }
+  }
 
 }
 

@@ -72,5 +72,12 @@ void callback(char* topic, byte* payload, unsigned int length)
     }
   }
 
+  if (strcmp(topic, "openhab/start") == 0 && (char)payload[0] == '1')
+    // We received a signal that openhab server has just restarted, so will re-publish all mqtt states later, in mqtt()
+  {
+    mqtt_refresh = 1;
+  }
+
+  return;
 }
 

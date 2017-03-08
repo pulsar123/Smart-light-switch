@@ -4,7 +4,9 @@
 
   The code is designed for cheap (3-4$ from ebay) ESP8266 based boards NodeMCU devkit v0.9 with a micro-USB connector (based on CH340G
   chip; one needs to install the CH340 driver to your computer). E.g.: http://www.ebay.ca/itm/262136737901 .
-  
+
+  The detailed description: http://pulsar124.wikia.com/wiki/Smart_light_switch
+
   ESP8266 code for a smart light switch. The ESP controller operates the light via a solid state relay,
   and reads the state of the physical light switch. It can be either in Smart mode (turns on during the dark
   time, using an internal sunrise/set calculator and NTP date/time from Internet), or Dumb mode (manual operation
@@ -41,8 +43,8 @@
   After that comment the line out and re-upload the code, for normal operation.
 
   EEPROM memory is used to store some data, e.g. the hystorically highest temperature recorded, and the date/time when it happened (structure Tmax), also the total number of
-  reboots (N_boot). The hystorically largest temperature is constantly communicated to MQTT, along with the current temperature. To see the other EEPROM data, and also lots of 
-  debugging information, recompile the code with the "#DEBUG" line uncommented in config.h,  connect the ESP to a computer via USB (but see the WARNING at the top!), 
+  reboots (N_boot). The hystorically largest temperature is constantly communicated to MQTT, along with the current temperature. To see the other EEPROM data, and also lots of
+  debugging information, recompile the code with the "#DEBUG" line uncommented in config.h,  connect the ESP to a computer via USB (but see the WARNING at the top!),
   and launch Serial Monitor from Arduino IDE.
 
   The code has abuse protection features - both for the physical switch, and for MQTT switches. If any of these switches is used more than 100 times in any given hour,
@@ -142,6 +144,8 @@ void setup()
   mqtt_abuse = 0;
   on_hours = 0;
   on_hours_old = 0;
+  phys_flip = 0;
+  mqtt_refresh = 0;
 
   // EEPROM stuff:
   EEPROM.begin(EEPROM_SIZE);

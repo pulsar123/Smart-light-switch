@@ -25,7 +25,7 @@
   it will operate normally using its internal clock, until the NTP connection succeeds.
 
   The only analogue read pin of ESP board (A0) is connected to a voltage divider formed by a 50k thermistor (NTC MF58 3950 B 50K from ebay; 10 pcs
-  for 1$) and a 47k regular resistor (the actual resistance in Ohms should be enetered in config.h as R_PULLDOWN), with the thermistor connected to
+  for 1$) and a 47k regular resistor (the actual resistance in Ohms should be enetered in config.h as R_PULL), with the thermistor connected to
   +3.3V. The thermistor should be glued to the solid state relay. It will report the temperature of the SSR to the controller (and to the MQTT network).
   If the temperature goes over T_MAX=50C (config.h), the SSR will be turned off until the controller is power cycled. (LED1 will be flashing
   (fast) in case of overheating.) This is a safety feature

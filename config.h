@@ -1,3 +1,6 @@
+// The root name for MQTT topics (should be unique for all your switches):
+#define ROOT "light1"
+
 /* Personal info (place the following 5 lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
   const char* ssid = "xxx";
   const char* password = "xxxx";
@@ -5,11 +8,8 @@
   const int TIME_ZONE = xx; // Time zone, hours; negative if west of Greenwich, positive if east; don't use summer/daylight saving time
   Sunrise mySunrise(xxx, xxx, TIME_ZONE);  // Your longitude and latutude; the latter is negative if west of Greenwich
 */
-
 #include "private.h" //  Make sure you create this file first (see the lines above)
 
-// The root name for MQTT topics:
-#define ROOT "light1"
 /*  MQTT topics:
   Incoming:
   ROOT"/switch1" : switching the mode (0: dumb; 1: smart);
@@ -66,12 +66,20 @@ const int YEAR_MIN = 2017;
 const int YEAR_MAX = 2037;
 const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the internal timer by more than this value (in seconds), ignore the new NTP time
 
-const float R_PULLDOWN = 45900; // Pulldown resistor (Ohms) used with the 50k thermistor on A0 pin
+/* Thermistor can be connected to A0 pin with either with a pulldown or pullup resistor, 50k in both cases. 
+   My original design used a pulldown resistor, but pullup is more economical as on can share the common ground
+   between the thermistor and solid state relay control - meaning only 3 (vs 4) wires from ESP to the SSR/thermistor bundle.
+   In terms of the temperature accuracy it shouldn't make a difference.
+   TH_PULLUP should be defined for the pullup scenario; comment it our for the pulldown scenario
+*/
+#define TH_PULLUP
+const float R_PULL = 45900; // Pulldown or pullup  resistor (Ohms) used with the 50k thermistor on A0 pin
 const float TH_A = 3.503602e-04; // Two coefficients for conversion of the thermistor resistance to temperature,
 const float TH_B = 2.771397e-04; // 1/T = TH_A + TH_B* ln(R), where T is in Kelvins and R is in Ohms
-// Analogue raw measurements when thermistor resistance is zero and infinity (should be 1023 and 0, but in reality different):
-const int A0_ZERO = 995;
-const int A0_INF = 1;
+// Analogue raw measurements on pin A0, corresponding to high (connected to +3.3V) and low (connected to ground) situations
+// In theory should be 1023 and 0, respectively, but for some reason the real values are slightly different
+const int A0_HIGH = 995;
+const int A0_LOW = 1;
 
 // Pins used (NodeMCU devkit v0.9; e.g. http://www.ebay.ca/itm/272526162060)
 // (See http://cdn.frightanic.com/blog/wp-content/uploads/2015/09/esp8266-nodemcu-dev-kit-v1-pins.png for NodeMCU devkit v0.9 pinout)

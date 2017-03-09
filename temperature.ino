@@ -3,8 +3,15 @@ void temperature()
 {
   if (t - t_a0 > DT_TH)
   {
+    float Raw = (float)analogRead(TH_PIN);
+    float R;
+#ifdef TH_PULLUP
+    // Thermistor resistance (assuming it is used with a pullup resistor), in Ohms:
+    R = R_PULL * (Raw - A0_LOW) / (A0_HIGH - Raw);
+#else
     // Thermistor resistance (assuming it is used with a pulldown resistor), in Ohms:
-    float R = R_PULLDOWN * ((A0_ZERO - 1.0) / ((float)analogRead(TH_PIN) - A0_INF) - 1.0);
+    R = R_PULL * ((A0_HIGH - 1.0) / (Raw - A0_LOW) - 1.0);
+#endif
     // Temperature (Celsius):
     float T = 1.0 / (TH_A + TH_B * log(R)) - 273.15;
     sum_T = sum_T + T;

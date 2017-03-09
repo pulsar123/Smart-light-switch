@@ -9,7 +9,7 @@
 #include "private.h" //  Make sure you create this file first (see the lines above)
 
 // The root name for MQTT topics:
-#define ROOT "light2"
+#define ROOT "light1"
 /*  MQTT topics:
   Incoming:
   ROOT"/switch1" : switching the mode (0: dumb; 1: smart);

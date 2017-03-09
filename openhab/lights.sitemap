@@ -1,5 +1,6 @@
 sitemap my_home label="Main Menu"
 {
+
  Text item=Light1 label="Front light"
    {
     Frame
@@ -21,4 +22,33 @@ sitemap my_home label="Main Menu"
      }
    }
 
+
+ Text item=Light2 label="Back light"
+   {
+    Frame
+      {
+       Text item=Light2_alarm visibility=[Light2_alarmv>0]
+       Text item=Light2_state
+      }
+    Frame
+      {
+       Switch item=Light2_switch1
+       Text item=Light2_mode
+       Switch item=Light2_switch2 visibility=[Light2_mode==Dumb]
+     }
+    Frame
+     {
+       Text item=Light2_phys
+       Text item=Light2_temp
+       Text item=Light2_left visibility=[Light2_mode==Smart]
+     }
+   }
+
+ Frame 
+   {
+    Switch item=Refresh_all mappings=[ON="Refresh all"]
+   }
+
 }
+
+

@@ -1,6 +1,9 @@
 // *.items file for OpenHab 2. Should go to conf/items folder.
 
+Switch Refresh_all "" <empty> {mqtt=">[broker:openhab/start:command:ON:1],>[broker:openhab/start:command:ON:0]"}
+
 /* Lights */
+// Front
 String Light1 "" <light> {mqtt="<[broker:light1/light_state:state:MAP(onoff.map)]"}
 Switch Light1_switch1 "Mode" <empty> {mqtt=">[broker:light1/switch1:command:ON:1],>[broker:light1/switch1:command:OFF:0],<[broker:light1/mode:state:MAP(onoff.map)]"}
 String Light1_mode "[%s]" <empty> {mqtt="<[broker:light1/mode:state:MAP(light.map)]"}
@@ -9,6 +12,19 @@ Switch Light1_switch2 "Manual switch" <empty> {mqtt=">[broker:light1/switch2:com
 String Light1_phys "Physical switch state" <switch> {mqtt="<[broker:light1/switch_state:state:MAP(onoff.map)]"}
 String Light1_left "Next flip at [%s]" <empty> {mqtt="<[broker:light1/left:state:default]"}
 String Light1_temp "T = [%s   C]" <temperature> {mqtt="<[broker:light1/temp:state:default]"}
-//String Light1_alarm "ALARM!" <empty> {mqtt="<[broker:light1/alarm:state:MAP(temp_alarm.map)]"}
 Number Light1_alarm "[MAP(temp_alarm.map):%s!]" <empty> {mqtt="<[broker:light1/alarm:state:default]"}
 Number Light1_alarmv "[%d]" <empty> {mqtt="<[broker:light1/alarm:state:default]"}
+
+// Back
+String Light2 "" <light> {mqtt="<[broker:light2/light_state:state:MAP(onoff.map)]"}
+Switch Light2_switch1 "Mode" <empty> {mqtt=">[broker:light2/switch1:command:ON:1],>[broker:light2/switch1:command:OFF:0],<[broker:light2/mode:state:MAP(onoff.map)]"}
+String Light2_mode "[%s]" <empty> {mqtt="<[broker:light2/mode:state:MAP(light.map)]"}
+String Light2_state "" <light> {mqtt="<[broker:light2/light_state:state:MAP(onoff.map)]"}
+Switch Light2_switch2 "Manual switch" <empty> {mqtt=">[broker:light2/switch2:command:ON:1],>[broker:light2/switch2:command:OFF:0],<[broker:light2/light_state:state:MAP(onoff.map)]"}
+String Light2_phys "Physical switch state" <switch> {mqtt="<[broker:light2/switch_state:state:MAP(onoff.map)]"}
+String Light2_left "Next flip at [%s]" <empty> {mqtt="<[broker:light2/left:state:default]"}
+String Light2_temp "T = [%s   C]" <temperature> {mqtt="<[broker:light2/temp:state:default]"}
+Number Light2_alarm "[MAP(temp_alarm.map):%s!]" <empty> {mqtt="<[broker:light2/alarm:state:default]"}
+Number Light2_alarmv "[%d]" <empty> {mqtt="<[broker:light2/alarm:state:default]"}
+
+

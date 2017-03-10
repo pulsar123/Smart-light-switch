@@ -1,15 +1,25 @@
-// The root name for MQTT topics (should be unique for all your switches):
-#define ROOT "light1"
+/* The switch number; use this to keep separate profiles for your switches
+   1: Front light
+   2: Back light
+   ...
+*/
+#define N_SWITCH 2
 
 /* Personal info (place the following 5 lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
   const char* ssid = "xxx";
   const char* password = "xxxx";
   const char* mqtt_server = "xxxx";
   const int TIME_ZONE = xx; // Time zone, hours; negative if west of Greenwich, positive if east; don't use summer/daylight saving time
-  Sunrise mySunrise(xxx, xxx, TIME_ZONE);  // Your longitude and latutude; the latter is negative if west of Greenwich
+  Sunrise2 mySunrise(xxx, xxx, TIME_ZONE);  // Your longitude and latutude; the latter is negative if west of Greenwich
 */
 #include "private.h" //  Make sure you create this file first (see the lines above)
 
+
+#define STRINGIZE2(s) #s
+#define STRINGIZE(s) STRINGIZE2(s)
+
+// The root name for MQTT topics; contains N_SWITCH parameter as the last character:
+#define ROOT "light" STRINGIZE(N_SWITCH)
 /*  MQTT topics:
   Incoming:
   ROOT"/switch1" : switching the mode (0: dumb; 1: smart);
@@ -22,7 +32,7 @@
   ROOT"/switch_state"  : the physical switch's state (on/off)
   ROOT"/left"    : hours:minutes left before the next smart flip
   ROOT"/alarm"   : 1 if exceeded the critical temperature on SSR, 2 for MQTT abuse, 3 for phys. switch abuse, 0 otherwise
-  ROOT"/temp"    : current / historically maximum SSR temperature in C  
+  ROOT"/temp"    : current / historically maximum SSR temperature in C
 
   For the "openhab/start" thing to work, one needs to have the OpenHab to publish "1" (followed by "0") in this topic at startup.
   Under Windows this can be accomplished by adding this line before the last line of openhab.bat file:
@@ -50,7 +60,6 @@ const long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal 
 const long DT_NTP = 86400000; // Time interval for NTP time re-syncing, ms
 const long DT_DARK = 37000; // How often to do smart mode checking, in ms; better not be integer minutes, to add some randomness at seconds level
 const int DARK_RAN = 11; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in minutes; should be odd for symmetry
-const int DARK_SHIFT = 6; // Constant shift of the smart light on/off times into the darker part of the day (positive for sunset, negative for sunrise), in minutes
 const long DT_TH = 100; // raw temperarture measurement interval, ms
 const int N_T = 10; // average temperature over this many measurements (so the actual temperature is updated every N_T*DT_TH ms)
 const float T_MAX = 50.0; // Maximum allowed SSR temperature (C); if larger, the SSR will be disabled until reboot time, and LED1 will start slowly flashing
@@ -66,13 +75,20 @@ const int YEAR_MIN = 2017;
 const int YEAR_MAX = 2037;
 const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the internal timer by more than this value (in seconds), ignore the new NTP time
 
-/* Thermistor can be connected to A0 pin with either with a pulldown or pullup resistor, 50k in both cases. 
+
+// Custom profiles for different switches:
+//----------------------------------------- Switch 1 (Front light) ------------------------------------------
+#if N_SWITCH == 1
+// Custom z-angle (in degrees) for the sunset/sunrise calculations. This is the angle of the Sun's center below the horizon (in the absense of refraction).
+// Z=0.5,6,12,18 correspond to Actual, Civil, Nautical, and Astronomical sunset from Sunset.h library. It can also be negative (Sun is above the horizon).
+const float Z_ANGLE = 4;
+/* Thermistor can be connected to A0 pin with either with a pulldown or pullup resistor, 50k in both cases.
    My original design used a pulldown resistor, but pullup is more economical as on can share the common ground
    between the thermistor and solid state relay control - meaning only 3 (vs 4) wires from ESP to the SSR/thermistor bundle.
    In terms of the temperature accuracy it shouldn't make a difference.
    TH_PULLUP should be defined for the pullup scenario; comment it our for the pulldown scenario
 */
-#define TH_PULLUP
+//#define TH_PULLUP
 const float R_PULL = 45900; // Pulldown or pullup  resistor (Ohms) used with the 50k thermistor on A0 pin
 const float TH_A = 3.503602e-04; // Two coefficients for conversion of the thermistor resistance to temperature,
 const float TH_B = 2.771397e-04; // 1/T = TH_A + TH_B* ln(R), where T is in Kelvins and R is in Ohms
@@ -80,6 +96,20 @@ const float TH_B = 2.771397e-04; // 1/T = TH_A + TH_B* ln(R), where T is in Kelv
 // In theory should be 1023 and 0, respectively, but for some reason the real values are slightly different
 const int A0_HIGH = 995;
 const int A0_LOW = 1;
+
+//----------------------------------------- Switch 2 (Back light) ------------------------------------------
+#elif N_SWITCH == 2
+const float Z_ANGLE = 4;
+#define TH_PULLUP
+const float R_PULL = 45900;
+const float TH_A = 3.503602e-04;
+const float TH_B = 2.771397e-04;
+const int A0_HIGH = 995;
+const int A0_LOW = 1;
+
+#endif
+//----------------------------------------------------------------------------------------------------------
+
 
 // Pins used (NodeMCU devkit v0.9; e.g. http://www.ebay.ca/itm/272526162060)
 // (See http://cdn.frightanic.com/blog/wp-content/uploads/2015/09/esp8266-nodemcu-dev-kit-v1-pins.png for NodeMCU devkit v0.9 pinout)
@@ -94,6 +124,11 @@ const byte TH_PIN = A0;
 const byte LED0 = BUILTIN_LED;  // D0
 // Internal LED for warning signal (overheating: fast flashing; abuse: slow flashing)
 const byte LED1 = 2; // D4
+
+
+
+//+++++++++++++++++++++++++++++ Normally nothing should be changed below ++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 // Structure used to store the historically maximum temperature and the corresponding date/time in EEPROM:
 struct Tmax_struc
@@ -143,3 +178,4 @@ long int on_hours, on_hours_old;
 struct Tmax_struc Tmax;
 byte phys_flip;
 byte mqtt_refresh;
+

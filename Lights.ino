@@ -63,6 +63,8 @@
   https://github.com/knolleary/pubsubclient
   https://github.com/ekstrand/ESP8266wifi
   https://github.com/PaulStoffregen/Time
+
+  I already included (customised) files from the following library, so you shouldn't install it separately:
   https://github.com/chaeplin/Sunrise
 
   SSR: 250V / 2A (1$ on ebay: http://www.ebay.ca/itm/282227077259 ; the 5V model). Turn-on voltage is as low as 2.0V (so perfectly
@@ -77,8 +79,8 @@
 #include <WiFiUdp.h>
 #include <Time.h>
 #include <TimeLib.h>
-#include <Sunrise.h>
 #include <EEPROM.h>
+#include "Sunrise2.h"
 #include "config.h"
 
 
@@ -135,7 +137,7 @@ void setup()
   mqtt_init = 1;
   i_mqtt_T = 0;
   dt_dev = deviation();
-  mySunrise.Civil();
+  mySunrise.Custom(Z_ANGLE);
   Day_old = -2;
   dt_dev = 0;
   switch_count = 0;

@@ -93,8 +93,8 @@ void smart()
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 int deviation()
-// Deviation of the smart light on/off time from sunset or sunrise (constant + random parts), in minutes
+// Random deviation of the smart light on/off time from sunset or sunrise, in minutes
 {
-  return DARK_SHIFT + random(DARK_RAN) - (DARK_RAN - 1) / 2;
+  return random(DARK_RAN) - (DARK_RAN - 1) / 2;
 }
 

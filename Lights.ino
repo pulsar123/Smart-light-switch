@@ -93,7 +93,9 @@ void setup()
   delay(100);
 #endif
   pinMode(SSR_PIN, OUTPUT);
+#ifdef PHYS_SWITCH
   pinMode(SWITCH_PIN, INPUT_PULLUP);
+#endif  
   knows_time = 0;
   WiFi_on = 0;
   MQTT_on = 0;
@@ -102,9 +104,13 @@ void setup()
   Mode_old = Mode;
   mode_count = 0;
   instant_check = 0;
+#ifdef PHYS_SWITCH
   switch_state = 1 - digitalRead(SWITCH_PIN); // reading the current state of the physical switch
   switch_state_old = switch_state;
   light_state = switch_state; // Initially the light state = physical switch state (dumb mode)
+#else
+  light_state = 0;
+#endif    
   light_state_old = light_state;
   pinMode(TH_PIN, INPUT);
 #ifdef WIFI_LED

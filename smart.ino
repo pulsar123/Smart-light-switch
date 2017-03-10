@@ -11,6 +11,17 @@ void smart()
     if (Day != Day_old)
     {
       dt_dev = deviation();
+#ifdef INDOORS
+      // Figuring out when to turn the indoor light off for the night, and on in the morning
+      // +1 minute to make T_1B moment inclusive:
+      int delta = (int)(60 * (T_1B - T_1A)) + 1;
+      // Random moment (in minutes since midnight) to turn off the indoor light in the evening (from the T_1A...T_1B interval):
+      dt_1 = random(delta) + (int)(60 * T_1A);
+      // +1 minute to make T_2B moment inclusive:
+      delta = (int)(60 * (T_2B - T_2A)) + 1;
+      // Random moment (in minutes since midnight) to turn on the indoor light in the morning (from the T_2A...T_2B interval):
+      dt_2 = random(delta) + (int)(60 * T_2A);
+#endif
 #ifdef DEBUG
       Serial.print("dt_dev = ");
       Serial.println(dt_dev);
@@ -27,10 +38,17 @@ void smart()
       // Smart mode
     {
       // Dark time criterion:
-      if (light_state == 0 && (dt_now < dt_rise - dt_dev || dt_now > dt_set + dt_dev) && bad_temp == 0)
+      if (light_state == 0 && (dt_now < dt_rise - dt_dev || dt_now > dt_set + dt_dev))
         light_state = 1;
       // Bright time criterion:
       else if (light_state == 1 && (dt_now >= dt_rise - dt_dev && dt_now <= dt_set + dt_dev))
+        light_state = 0;
+#ifdef INDOORS
+      // Indoor lights should be turned off between dt_1 and dt_2, on top of the sunrise/sunset logic
+      if (dt_now > dt_1 || dt_now <= dt_2)
+        light_state = 0;
+#endif
+      if (bad_temp)
         light_state = 0;
     }
 

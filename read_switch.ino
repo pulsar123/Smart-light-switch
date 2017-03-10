@@ -2,6 +2,10 @@ void read_switch()
 // Reading the physical switch state, with de-bouncing, and triple-switch command detection.
 // Updates switch_state, light_state, and Mode variables.
 {
+#ifndef PHYS_SWITCH
+  return;
+#endif  
+  
   phys_flip = 0;
   
   byte switch_state_temp = 1 - digitalRead(SWITCH_PIN);

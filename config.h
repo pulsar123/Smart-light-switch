@@ -1,9 +1,11 @@
 /* The switch number; use this to keep separate profiles for your switches
    1: Front light
    2: Back light
+   3: 1st floor
+   4: 2nd floor
    ...
 */
-#define N_SWITCH 2
+#define N_SWITCH 3
 
 /* Personal info (place the following 5 lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
   const char* ssid = "xxx";
@@ -58,7 +60,6 @@
 const long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
 const long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)
 const long DT_NTP = 86400000; // Time interval for NTP time re-syncing, ms
-const long DT_DARK = 37000; // How often to do smart mode checking, in ms; better not be integer minutes, to add some randomness at seconds level
 const int DARK_RAN = 11; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in minutes; should be odd for symmetry
 const long DT_TH = 100; // raw temperarture measurement interval, ms
 const int N_T = 10; // average temperature over this many measurements (so the actual temperature is updated every N_T*DT_TH ms)
@@ -79,9 +80,14 @@ const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the in
 // Custom profiles for different switches:
 //----------------------------------------- Switch 1 (Front light) ------------------------------------------
 #if N_SWITCH == 1
+// Uncomment if you want to use a physical switch:
+#define PHYS_SWITCH
+// Uncomment if the lights are indoors. This will turn off the lights during the night. The lights will be on in the evening (after sunset) and morning (before sunrise).
+//#define INDOORS
 // Custom z-angle (in degrees) for the sunset/sunrise calculations. This is the angle of the Sun's center below the horizon (in the absense of refraction).
 // Z=0.5,6,12,18 correspond to Actual, Civil, Nautical, and Astronomical sunset from Sunset.h library. It can also be negative (Sun is above the horizon).
 const float Z_ANGLE = 4;
+const long DT_DARK = 37000; // How often to do smart mode checking, in ms; better not be integer minutes, to add some randomness at seconds level
 /* Thermistor can be connected to A0 pin with either with a pulldown or pullup resistor, 50k in both cases.
    My original design used a pulldown resistor, but pullup is more economical as on can share the common ground
    between the thermistor and solid state relay control - meaning only 3 (vs 4) wires from ESP to the SSR/thermistor bundle.
@@ -99,7 +105,10 @@ const int A0_LOW = 1;
 
 //----------------------------------------- Switch 2 (Back light) ------------------------------------------
 #elif N_SWITCH == 2
+#define PHYS_SWITCH
+//#define INDOORS
 const float Z_ANGLE = 4;
+const long DT_DARK = 49000;
 #define TH_PULLUP
 const float R_PULL = 45900;
 const float TH_A = 3.503602e-04;
@@ -107,6 +116,49 @@ const float TH_B = 2.771397e-04;
 const int A0_HIGH = 995;
 const int A0_LOW = 1;
 
+//----------------------------------------- Switch 3 (1st floor) ------------------------------------------
+#elif N_SWITCH == 3
+//#define PHYS_SWITCH
+#define INDOORS
+// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
+// (Only matters if INDOORS is defined above)
+const float T_1A = 22.5;
+const float T_1B = 23.0;
+// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
+// (Only matters if INDOORS is defined above)
+const float T_2A = 7.05;
+const float T_2B = 7.5;
+#define INDOORS
+const float Z_ANGLE = 1;
+const long DT_DARK = 31000;
+#define TH_PULLUP
+const float R_PULL = 45900;
+const float TH_A = 3.503602e-04;
+const float TH_B = 2.771397e-04;
+const int A0_HIGH = 995;
+const int A0_LOW = 1;
+
+//----------------------------------------- Switch 4 (2nd floor) ------------------------------------------
+#elif N_SWITCH == 4
+#define PHYS_SWITCH
+#define INDOORS
+// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
+// (Only matters if INDOORS is defined above)
+const float T_1A = 23.05;
+const float T_1B = 23.5;
+// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
+// (Only matters if INDOORS is defined above)
+const float T_2A = 6.5;
+const float T_2B = 7.0;
+#define INDOORS
+const float Z_ANGLE = 2;
+const long DT_DARK = 31000;
+#define TH_PULLUP
+const float R_PULL = 45900;
+const float TH_A = 3.503602e-04;
+const float TH_B = 2.771397e-04;
+const int A0_HIGH = 995;
+const int A0_LOW = 1;
 #endif
 //----------------------------------------------------------------------------------------------------------
 
@@ -178,4 +230,7 @@ long int on_hours, on_hours_old;
 struct Tmax_struc Tmax;
 byte phys_flip;
 byte mqtt_refresh;
+#ifdef INDOORS
+int dt_1, dt_2;
+#endif
 

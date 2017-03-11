@@ -8,9 +8,12 @@ void temperature()
 #ifdef TH_PULLUP
     // Thermistor resistance (assuming it is used with a pullup resistor), in Ohms:
     R = R_PULL * (Raw - A0_LOW) / (A0_HIGH - Raw);
+    // Correcting for the weird board artifact - it appears to have an internal pulldown resistor on A0 pin, with R_INETRNAL value:
+    R = 1.0 / (1.0 / R - 1.0 / R_INTERNAL);
 #else
     // Thermistor resistance (assuming it is used with a pulldown resistor), in Ohms:
-    R = R_PULL * ((A0_HIGH - 1.0) / (Raw - A0_LOW) - 1.0);
+    // Correcting for the weird board artifact - it appears to have an internal pulldown resistor on A0 pin, with R_INETRNAL value:
+    R = 1.0 / (1.0 / R_INTERNAL + 1.0 / R_PULL) * ((A0_HIGH - 1.0) / (Raw - A0_LOW) - 1.0);
 #endif
     // Temperature (Celsius):
     float T = 1.0 / (TH_A + TH_B * log(R)) - 273.15;
@@ -69,17 +72,17 @@ void temperature()
 
 #ifdef DEBUG
       // Uncomment to measure the A0_LOW and A0_HIGH parameters (raw A0 pin values when it is pulled down and up, respectively)
-      /*
-            Serial.print("+++ A0: ");
-            Serial.print(analogRead(TH_PIN));
-            Serial.print(", R=");
-            Serial.print(R_int);
-            Serial.print("; T=");
-            Serial.print(T_int);
-            Serial.print(".");
-            Serial.print(T_dec);
-            Serial.println(" C");
-      */
+
+      Serial.print("+++ A0: ");
+      Serial.print(analogRead(TH_PIN));
+      Serial.print(", R=");
+      Serial.print(R_int);
+      Serial.print("; T=");
+      Serial.print(T_int);
+      Serial.print(".");
+      Serial.print(T_dec);
+      Serial.println(" C");
+
 #endif
     }
   }

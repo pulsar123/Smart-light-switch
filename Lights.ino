@@ -112,7 +112,7 @@ void setup()
   light_state = 0;
 #endif    
   light_state_old = light_state;
-  pinMode(TH_PIN, INPUT);
+//  pinMode(TH_PIN, INPUT);
 #ifdef WIFI_LED
   pinMode(LED0, OUTPUT);     // Initialize the BUILTIN_LED pin as an output (WiFi connection indicator)
 #endif

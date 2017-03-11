@@ -5,7 +5,7 @@
    4: 2nd floor
    ...
 */
-#define N_SWITCH 3
+#define N_SWITCH 2
 
 /* Personal info (place the following 5 lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
   const char* ssid = "xxx";
@@ -53,7 +53,7 @@
 // Then comment it out again and upload the code one more time, for the actual functionality
 //#define INITIALIZE
 // Only for debugging (will use Serial interface to print messages):
-//#define DEBUG
+#define DEBUG
 // Uncomment to use one internal LEDs as WiFi status (the other internal LED will only be used for warning signals)
 //#define WIFI_LED
 
@@ -84,6 +84,14 @@ const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the in
 #define PHYS_SWITCH
 // Uncomment if the lights are indoors. This will turn off the lights during the night. The lights will be on in the evening (after sunset) and morning (before sunrise).
 //#define INDOORS
+// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
+// (Only matters if INDOORS is defined above)
+const float T_1A = 0;
+const float T_1B = 0;
+// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
+// (Only matters if INDOORS is defined above)
+const float T_2A = 0;
+const float T_2B = 0;
 // Custom z-angle (in degrees) for the sunset/sunrise calculations. This is the angle of the Sun's center below the horizon (in the absense of refraction).
 // Z=0.5,6,12,18 correspond to Actual, Civil, Nautical, and Astronomical sunset from Sunset.h library. It can also be negative (Sun is above the horizon).
 const float Z_ANGLE = 4;
@@ -96,25 +104,38 @@ const long DT_DARK = 37000; // How often to do smart mode checking, in ms; bette
 */
 //#define TH_PULLUP
 const float R_PULL = 45900; // Pulldown or pullup  resistor (Ohms) used with the 50k thermistor on A0 pin
+/* NodeMCU devkit v0.9 uses an internal voltage divider based on two resistors - 100k and 220k - to convert the 0...3.3V input voltage range
+   to 0...1V range required by the ESP chip (https://github.com/nodemcu/nodemcu-devkit). This creats a pulldown resistor of 320k on A0 pin.
+   This needs to be corrected for. If your board doesn't have this issue, put a very large number here (1e9). But then it is your responsibility
+   to wire your thermistor in such a way that ESP chip will not get >1V.
+*/
+const float R_INTERNAL = 320000;
 const float TH_A = 3.503602e-04; // Two coefficients for conversion of the thermistor resistance to temperature,
 const float TH_B = 2.771397e-04; // 1/T = TH_A + TH_B* ln(R), where T is in Kelvins and R is in Ohms
-// Analogue raw measurements on pin A0, corresponding to high (connected to +3.3V) and low (connected to ground) situations
+// Analogue raw measurements on pin A0, corresponding to high (connected to +3.3V directly - important because of the internal voltage divider on A0)
+// and low (connected to ground directly) situations
 // In theory should be 1023 and 0, respectively, but for some reason the real values are slightly different
 const int A0_HIGH = 995;
 const int A0_LOW = 1;
 
 //----------------------------------------- Switch 2 (Back light) ------------------------------------------
 #elif N_SWITCH == 2
+//ADC_MODE(ADC_TOUT_3V3);
 #define PHYS_SWITCH
 //#define INDOORS
+const float T_1A = 0;
+const float T_1B = 0;
+const float T_2A = 0;
+const float T_2B = 0;
 const float Z_ANGLE = 4;
 const long DT_DARK = 49000;
 #define TH_PULLUP
-const float R_PULL = 45900;
+const float R_PULL = 46000;
+const float R_INTERNAL = 320000;
 const float TH_A = 3.503602e-04;
 const float TH_B = 2.771397e-04;
-const int A0_HIGH = 995;
-const int A0_LOW = 1;
+const int A0_HIGH = 996;
+const int A0_LOW = 0;
 
 //----------------------------------------- Switch 3 (1st floor) ------------------------------------------
 #elif N_SWITCH == 3
@@ -132,11 +153,12 @@ const float T_2B = 7.5;
 const float Z_ANGLE = 1;
 const long DT_DARK = 31000;
 #define TH_PULLUP
-const float R_PULL = 45900;
+const float R_PULL = 46000;
+const float R_INTERNAL = 320000;
 const float TH_A = 3.503602e-04;
 const float TH_B = 2.771397e-04;
-const int A0_HIGH = 995;
-const int A0_LOW = 1;
+const int A0_HIGH = 996;
+const int A0_LOW = 0;
 
 //----------------------------------------- Switch 4 (2nd floor) ------------------------------------------
 #elif N_SWITCH == 4
@@ -155,6 +177,7 @@ const float Z_ANGLE = 2;
 const long DT_DARK = 31000;
 #define TH_PULLUP
 const float R_PULL = 45900;
+const float R_INTERNAL = 320000;
 const float TH_A = 3.503602e-04;
 const float TH_B = 2.771397e-04;
 const int A0_HIGH = 995;

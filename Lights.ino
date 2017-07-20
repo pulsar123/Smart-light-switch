@@ -79,6 +79,7 @@
 #include <WiFiUdp.h>
 #include <Time.h>
 #include <TimeLib.h>
+//#include <Timezone.h>
 #include <EEPROM.h>
 #include "Sunrise2.h"
 #include "config.h"
@@ -95,7 +96,7 @@ void setup()
   pinMode(SSR_PIN, OUTPUT);
 #ifdef PHYS_SWITCH
   pinMode(SWITCH_PIN, INPUT_PULLUP);
-#endif  
+#endif
   knows_time = 0;
   WiFi_on = 0;
   MQTT_on = 0;
@@ -110,9 +111,9 @@ void setup()
   light_state = switch_state; // Initially the light state = physical switch state (dumb mode)
 #else
   light_state = 0;
-#endif    
+#endif
   light_state_old = light_state;
-//  pinMode(TH_PIN, INPUT);
+  //  pinMode(TH_PIN, INPUT);
 #ifdef WIFI_LED
   pinMode(LED0, OUTPUT);     // Initialize the BUILTIN_LED pin as an output (WiFi connection indicator)
 #endif
@@ -125,6 +126,7 @@ void setup()
   digitalWrite(LED0, led0);
 #endif
   digitalWrite(LED1, led1);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
@@ -155,8 +157,33 @@ void setup()
   phys_flip = 0;
   mqtt_refresh = 0;
 
-  // EEPROM stuff:
+  // Time zone rules (see https://github.com/JChristensen/Timezone), this one is for EST (US/Canada)
+//  TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
+//  TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours  
+//  Timezone usEastern(usEDT, usEST);
+  
+// EEPROM stuff:
   EEPROM.begin(EEPROM_SIZE);
+  /*
+    EEPROM.get(ADDR_TMAX, Tmax);
+    if (Tmax.T > 200)
+    {
+      Tmax = { -100, 0, 0, 0, 0, 0};
+      EEPROM.put(ADDR_TMAX, Tmax);
+      EEPROM.put(ADDR_BOOT, (int)0);
+      EEPROM.commit();
+    }
+    else
+    {
+      // Increamenting the booting counter:
+      int N_boot;
+      EEPROM.get(ADDR_BOOT, N_boot);
+      N_boot++;
+      EEPROM.put(ADDR_BOOT, N_boot);
+      EEPROM.commit();
+    }
+  */
+
 #ifdef INITIALIZE
 #ifdef DEBUG
   Serial.println("Initializing...");
@@ -184,6 +211,7 @@ void setup()
   Serial.println("Setup is done");
 #endif
 #endif
+
 }
 
 

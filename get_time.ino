@@ -14,13 +14,15 @@ void get_time()
 
   if (WiFi_on && t - t_ntp > DT_NTP)
   {
+    // Local time without summer time correction:
     unixTime = ntpUnixTime(udp) + TIME_ZONE * 3600;
+    //    unixTime = usEastern.toLocal(ntpUnixTime(udp));
     // Deviation of the internal timer from the NTP time:
     unsigned long delta = now() - unixTime;
     // Ignore the new NTP time if the deviation is too large (>MAX_DELTA seconds):
     if (unixTime > 0 && (knows_time == 0 || abs(delta) < MAX_DELTA))
     {
-      // (Re)setting the internal timer to the NTP time:
+      // (Re)setting the internal timer to the NTP (local) time:
       setTime(unixTime);
       // A sanity check:
       if (year() < YEAR_MIN || year() > YEAR_MAX)
@@ -35,7 +37,7 @@ void get_time()
         return;
       }
       if (knows_time == 0)
-        // We connected to NTP for teh first time since reboot, so switching to smart mode by default:
+        // We connected to NTP for the first time since reboot, so switching to smart mode by default:
         Mode = 1;
       // If we at least once connect to NTP, time is considered to be known (even if later disconnected from WiFi):
       knows_time = 1;

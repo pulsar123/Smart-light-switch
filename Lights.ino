@@ -63,6 +63,7 @@
   https://github.com/knolleary/pubsubclient
   https://github.com/ekstrand/ESP8266wifi
   https://github.com/PaulStoffregen/Time
+  https://github.com/JChristensen/Timezone
 
   I already included (customised) files from the following library, so you shouldn't install it separately:
   https://github.com/chaeplin/Sunrise
@@ -79,7 +80,7 @@
 #include <WiFiUdp.h>
 #include <Time.h>
 #include <TimeLib.h>
-//#include <Timezone.h>
+#include <Timezone.h>
 #include <EEPROM.h>
 #include "Sunrise2.h"
 #include "config.h"
@@ -134,8 +135,8 @@ void setup()
   t = t0;
   t_switch = t0 - DT_DEBOUNCE - 1;
   t_mode = t0 - DT_MODE - 1;
-  t_ntp = t0 - DT_NTP - 1;
-  t_dark = t0 - DT_DARK - 1;
+  t_ntp = t0;
+  local = 0;
   t_a0 = t0;
   t_led1 = t0;
   sum_T = 0.0;
@@ -146,7 +147,10 @@ void setup()
   i_mqtt_T = 0;
   dt_dev = deviation();
   mySunrise.Custom(Z_ANGLE);
-  Day_old = -2;
+  redo_times = 1;
+  t_sunrise2 = 0;
+  Hour = 0;
+  Hour_old = 0;
   dt_dev = 0;
   switch_count = 0;
   switch_abuse = 0;
@@ -228,14 +232,11 @@ void loop()
 
   t = millis();
 
-  // Get time from NTP
+  // Get all time parameters (initially, then every 24h)
   get_time();
 
   // Reading the physical switch state (with debouncing):
   read_switch();
-
-  // Smart functionality:
-  smart();
 
   // Measuring the SSR's temperature, and disabling it if it's too hot:
   temperature();
@@ -253,6 +254,6 @@ void loop()
   Mode_old = Mode;
   on_hours_old = on_hours;
   if (knows_time)
-    Day_old = Day;
+    Hour_old = Hour;
 }
 

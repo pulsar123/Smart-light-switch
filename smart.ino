@@ -1,5 +1,7 @@
 void smart()
 {
+/*
+  
   // Smart functionality (turns on the light when it gets dark, and off when it gets bright, based on sunrise/sunset calculator)
   // Doing the checks regularly (every DT_DARK ms), or if a request of instant_check comes (from MQTT or physical switch)
   if (knows_time && (t - t_dark > DT_DARK || instant_check == 1))
@@ -106,13 +108,6 @@ void smart()
 #endif
     t_dark = t;
   }
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-int deviation()
-// Random deviation of the smart light on/off time from sunset or sunrise, in minutes
-{
-  return random(DARK_RAN) - (DARK_RAN - 1) / 2;
+  */
 }
 

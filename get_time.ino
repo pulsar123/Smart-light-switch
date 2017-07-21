@@ -1,5 +1,5 @@
 void get_time()
-// Get time from NTP regularly
+// Compute all time parameters - initially, and then every 24h at 1am (local winter time)
 {
   // Computing the on-hours based on internal timer:
   on_hours =  t / 3600000;
@@ -12,18 +12,29 @@ void get_time()
       mqtt_count = 0;
   }
 
-  if (WiFi_on && t - t_ntp > DT_NTP)
+  // Current (local winter time) day:
+  if (knows_time)
   {
-    // Local time without summer time correction:
-    unixTime = ntpUnixTime(udp) + TIME_ZONE * 3600;
+    Hour = hour();
+    if (Hour != Hour_old && Hour == 1)
+      // We recalculate time parameters every 24h at 1am local winter time
+      redo_times = 1;
+  }
+
+  if (WiFi_on && (knows_time == 0 || redo_times == 1) && t >= t_ntp)
+  {
+    // Local winter time:
+    local = ntpUnixTime(udp) + TIME_ZONE * 3600;
     //    unixTime = usEastern.toLocal(ntpUnixTime(udp));
-    // Deviation of the internal timer from the NTP time:
-    unsigned long delta = now() - unixTime;
+    unsigned long delta = 0;
+    if (knows_time)
+      // Deviation of the internal timer from the NTP time:
+      delta = now() - local;
     // Ignore the new NTP time if the deviation is too large (>MAX_DELTA seconds):
-    if (unixTime > 0 && (knows_time == 0 || abs(delta) < MAX_DELTA))
+    if (local > 0 && (knows_time == 0 || abs(delta) < MAX_DELTA))
     {
-      // (Re)setting the internal timer to the NTP (local) time:
-      setTime(unixTime);
+      // (Re)setting the internal timer to the NTP (local winter time) time:
+      setTime(local);
       // A sanity check:
       if (year() < YEAR_MIN || year() > YEAR_MAX)
       {
@@ -31,27 +42,91 @@ void get_time()
         Serial.print("Bad NTP year: ");
         Serial.print(year());
         Serial.print("; unxiTime=");
-        Serial.println(unixTime);
+        Serial.println(local);
 #endif
-        t_ntp = t_ntp + 60000; // NTP failed, so trying again in 1 minute
-        return;
+        if (knows_time == 0)
+        {
+          t_ntp = t + 60000; // Initial NTP failed, so trying again in 1 minute
+          return;
+        }
       }
+
       if (knows_time == 0)
+      {
         // We connected to NTP for the first time since reboot, so switching to smart mode by default:
         Mode = 1;
-      // If we at least once connect to NTP, time is considered to be known (even if later disconnected from WiFi):
-      knows_time = 1;
-      t_ntp = t;
+        // If we at least once connect to NTP, time is considered to be known (even if later disconnected from WiFi):
+        knows_time = 1;
+      }
 #ifdef DEBUG
       Serial.print("NTP time: ");
-      Serial.println(unixTime);
+      Serial.println(local);
 #endif
     }
     else
     {
-      t_ntp = t_ntp + 60000; // NTP failed, so trying again in 1 minute
+      if (knows_time == 0)
+      {
+        t_ntp = t + 60000; // Initial NTP failed, so trying again in 1 minute
+        return;
+      }
     }
+  }
+
+  if (knows_time == 1 && redo_times == 1)
+    // We can only get to this point if the time is known. We get here initially, and then every local winter time 1am.
+    // Now we can compute all the time parameters which need to br re-computed daily
+  {
+    int Month = month();
+    int Day = day();
+    // Number of minutes from the midnight to sunrise and sunset, for the current date (local winter time):
+    dt_rise = mySunrise.Rise(Month, Day); // (month,day) - january=1
+    dt_set = mySunrise.Set(Month, Day);
+    // Current local winter time:
+    local = now();
+    // Local winter time corresponding to the last midnight:
+    unsigned long int t_midnight = local - (3600 * hour() + 60 * minute() + second());
+    // Sunrise and sunset time (with some random deviation):
+    if (t_sunrise2 == 0)
+      t_sunrise = t_midnight + 60 * dt_rise + deviation();
+    else
+      // If this is not the first calculation since reboot, we use the last day's calculation for the sunrise:
+      t_sunrise = t_sunrise2;
+    t_sunset = t_midnight + 60 * dt_set + deviation();
+    // We also need to know the next day's sunrise:
+    unsigned long int t_next_day = local + 86400;
+    int dt_rise2 = mySunrise.Rise(month(t_next_day), day(t_next_day));
+    unsigned long int t_midnight2 = t_midnight + 86400;
+    t_sunrise2 = t_midnight2 + 60 * dt_rise2 + deviation();
+
+#ifdef INDOORS
+    // Figuring out when to turn the indoor light off for the night, and on in the morning
+    // +1 second to make T_1B moment inclusive:
+    int delta = (int)(3600 * (T_1B - T_1A)) + 1;
+    // Random moment to turn off the indoor light in the evening (from the T_1A...T_1B interval):
+    t_1 = t_midnight + (int)(3600 * T_1A) + random(delta);
+    // +1 second to make T_2B moment inclusive:
+    delta = (int)(3600 * (T_2B - T_2A)) + 1;
+    // Random moment to turn on the indoor light in the morning (from the T_2A...T_2B interval):
+    t_2 = t_midnight + (int)(3600 * T_2A) + random(delta);
+#endif
+    // Summer time correction (seconds):
+    if (usEastern.locIsDST(local))
+      dt_summer = 3600;
+    else
+      dt_summer = 0;
+
+    redo_times = 0;
   }
 
   return;
 }
+
+
+
+int deviation()
+// Random deviation of the smart light on/off time from sunset or sunrise, in seconds
+{
+  return random(DARK_RAN) - (DARK_RAN - 1) / 2;
+}
+

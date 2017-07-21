@@ -60,7 +60,7 @@
 const long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
 const long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)
 const long DT_NTP = 86400000; // Time interval for NTP time re-syncing, ms
-const int DARK_RAN = 11; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in minutes; should be odd for symmetry
+const int DARK_RAN = 601; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in seconds; should be odd for symmetry
 const long DT_TH = 100; // raw temperarture measurement interval, ms
 const int N_T = 10; // average temperature over this many measurements (so the actual temperature is updated every N_T*DT_TH ms)
 const float T_MAX = 50.0; // Maximum allowed SSR temperature (C); if larger, the SSR will be disabled until reboot time, and LED1 will start slowly flashing
@@ -84,7 +84,7 @@ const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the in
 #define PHYS_SWITCH
 // Uncomment if the lights are indoors. This will turn off the lights during the night. The lights will be on in the evening (after sunset) and morning (before sunrise).
 //#define INDOORS
-// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
+// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock; local time):
 // (Only matters if INDOORS is defined above)
 const float T_1A = 0;
 const float T_1B = 0;
@@ -96,7 +96,6 @@ const float T_2B = 0;
 // Z=0.5,6,12,18 correspond to Actual, Civil, Nautical, and Astronomical sunset from Sunset.h library. It can also be negative (Sun is above the horizon).
 // The larger the number is, the darker it gets.
 const float Z_ANGLE = 4;
-const long DT_DARK = 37000; // How often to do smart mode checking, in ms; better not be integer minutes, to add some randomness at seconds level
 /* Thermistor can be connected to A0 pin with either a pulldown or pullup resistor, 47k in both cases.
    My original design used a pulldown resistor, but pullup is more economical as on can share the common ground
    between the thermistor and solid state relay control - meaning only 3 (vs 4) wires from ESP to the SSR/thermistor bundle.
@@ -129,7 +128,6 @@ const float T_1B = 0;
 const float T_2A = 0;
 const float T_2B = 0;
 const float Z_ANGLE = 4;
-const long DT_DARK = 49000;
 #define TH_PULLUP
 const float R_PULL = 45800;
 const float R_INTERNAL = 320000;
@@ -151,7 +149,6 @@ const float T_1B = 22.0;
 const float T_2A = 5.5;
 const float T_2B = 6.0;
 const float Z_ANGLE = 1;
-const long DT_DARK = 31000;
 #define TH_PULLUP
 const float R_PULL = 46000;
 const float R_INTERNAL = 320000;
@@ -159,29 +156,6 @@ const float TH_A = 3.503602e-04;
 const float TH_B = 2.771397e-04;
 const int A0_HIGH = 996;
 const int A0_LOW = 0;
-
-//----------------------------------------- Switch 4 (2nd floor) ------------------------------------------
-#elif N_SWITCH == 4
-#define PHYS_SWITCH
-#define INDOORS
-// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
-// (Only matters if INDOORS is defined above)
-const float T_1A = 23.05;
-const float T_1B = 23.5;
-// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
-// (Only matters if INDOORS is defined above)
-const float T_2A = 6.5;
-const float T_2B = 7.0;
-#define INDOORS
-const float Z_ANGLE = 2;
-const long DT_DARK = 31000;
-#define TH_PULLUP
-const float R_PULL = 45900;
-const float R_INTERNAL = 320000;
-const float TH_A = 3.503602e-04;
-const float TH_B = 2.771397e-04;
-const int A0_HIGH = 995;
-const int A0_LOW = 1;
 #endif
 //----------------------------------------------------------------------------------------------------------
 
@@ -225,35 +199,40 @@ const int ADDR_BOOT = ADDR_TMAX + sizeof(Tmax_struc); // Booting counter
 WiFiClient espClient;
 PubSubClient client(espClient);
 static WiFiUDP udp;
-unsigned long unixTime;
+unsigned long locarel;
 
 long lastMsg = 0;
 int value = 0;
 byte led0, led1;
-long t_led1;
+unsigned long t_led1;
 byte light_state, light_state_old, Mode, switch_state, switch_state_old, Mode_old;
-long t0, t, t_switch;
+unsigned long t0, t, t_switch;
 char buf[50], State_char;
 byte WiFi_on, MQTT_on;
 byte mode_count;
-long t_mode, t_ntp, t_dark;
-byte knows_time;
+unsigned long t_mode, t_ntp, t_sunrise, t_sunset, t_sunrise2, dt_summer;
+byte knows_time, redo_times;
 int dt_rise, dt_set, dt_now, dt_dev, dt_left, hrs_left, min_left, dt_event, hrs_event, min_event;
+int local;
 byte instant_check;
-long t_a0;
+unsigned long t_a0;
 float sum_T, T_avr;
 int i_T, i_mqtt_T;
 byte bad_temp;
 int T_int, T_dec;
 byte mqtt_init;
-int Day, Day_old;
+int Hour, Hour_old;
 int switch_count, mqtt_count;
 byte switch_abuse, mqtt_abuse;
-long int on_hours, on_hours_old;
+unsigned long int on_hours, on_hours_old;
 struct Tmax_struc Tmax;
 byte phys_flip;
 byte mqtt_refresh;
 #ifdef INDOORS
-int dt_1, dt_2;
+long int t_1, t_2;
 #endif
+
+  TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
+  TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours  
+  Timezone usEastern(usEDT, usEST);
 

@@ -56,7 +56,7 @@
 // Then comment it out again and upload the code one more time, for the actual functionality
 //#define INITIALIZE
 // Only for debugging (will use Serial interface to print messages):
-//#define DEBUG
+#define DEBUG
 // Uncomment to use one internal LEDs as WiFi status (the other internal LED will only be used for warning signals)
 //#define WIFI_LED
 
@@ -144,12 +144,12 @@ const int A0_LOW = 0;
 #define INDOORS
 // The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
 // (Only matters if INDOORS is defined above)
-const float T_1A = 21.5;
-const float T_1B = 22.0;
+const float T_1A = 22.5;
+const float T_1B = 23.0;
 // The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
 // (Only matters if INDOORS is defined above)
-const float T_2A = 5.5;
-const float T_2B = 6.0;
+const float T_2A = 6.5;
+const float T_2B = 7.0;
 const float Z_ANGLE = 1;
 #define TH_PULLUP
 const float R_PULL = 46000;
@@ -208,6 +208,9 @@ unsigned long t_led1;
 byte light_state, light_state_old, Mode, switch_state, switch_state_old, Mode_old;
 unsigned long t0, t, t_switch;
 char buf[50], State_char;
+#ifdef DEBUG
+char tmp[256];
+#endif
 byte WiFi_on, MQTT_on;
 byte mode_count;
 unsigned long t_mode, t_ntp, t_sunrise, t_sunset, t_sunrise_next, dt_summer, t_mqtt, t_midnight, t_midnight2;

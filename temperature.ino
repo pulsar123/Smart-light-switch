@@ -72,7 +72,7 @@ void temperature()
 
 #ifdef DEBUG
       // Uncomment to measure the A0_LOW and A0_HIGH parameters (raw A0 pin values when it is pulled down and up, respectively)
-
+/*
       Serial.print("+++ A0: ");
       Serial.print(analogRead(TH_PIN));
       Serial.print(", R=");
@@ -82,7 +82,7 @@ void temperature()
       Serial.print(".");
       Serial.print(T_dec);
       Serial.println(" C");
-
+*/
 #endif
     }
   }

@@ -74,6 +74,10 @@ void get_time()
     {
       if (knows_time == 0)
       {
+#ifdef DEBUG
+        Serial.print("Bad NTP time: ");
+        Serial.println(local);
+#endif
         t_ntp = t + 60000; // Initial NTP failed, so trying again in 1 minute
         return;
       }
@@ -105,6 +109,10 @@ void get_time()
     int dt_rise2 = mySunrise.Rise(month(t_next_day), day(t_next_day));
     t_midnight2 = t_midnight + 86400;
     t_sunrise_next = t_midnight2 + 60 * dt_rise2 + deviation();
+#ifdef DEBUG
+    sprintf(tmp, "local=%d, mid=%d, sunrise=%d, sunset=%d, next=%d", local, t_midnight, t_sunrise, t_sunset, t_sunrise_next);
+    Serial.println(tmp);
+#endif
 
 #ifdef INDOORS
     // Figuring out when to turn the indoor light off for the night, and on in the morning
@@ -120,6 +128,11 @@ void get_time()
     else
       // If this is not the first calculation since reboot, we use the last day's calculation for t_2:
       t_2 = t_2_next;
+    t_2_next = t_midnight2 + (int)(3600 * T_2A) + random(delta);
+#ifdef DEBUG
+    sprintf(tmp, "t_2=%d, t_1=%d, t_2_next=%d", t_2, t_1, t_2_next);
+    Serial.println(tmp);
+#endif
 #endif
     // Summer time correction (seconds); needs to be added to the local winter time to make proper (either winter or summer) local time:
     if (Zone.locIsDST(local))

@@ -8,10 +8,11 @@
   The detailed description: http://pulsar124.wikia.com/wiki/Smart_light_switch
 
   ESP8266 code for a smart light switch. The ESP controller operates the light via a solid state relay,
-  and reads the state of the physical light switch. It can be either in Smart mode (turns on during the dark
+  and reads the state of the (optional) physical light switch. It can be either in Smart mode (turns on during the dark
   time, using an internal sunrise/set calculator and NTP date/time from Internet), or Dumb mode (manual operation
-  with the physical switch or from MQTT client). One can switch between the two modes by turning on/off the physical switch 3 times
-  over <4 seconds interval. It uses MQTT protocol to communicate with the home automation system. (E.g.
+  with the physical switch or from MQTT client). It can also optionally turn off for the night. 
+  One can switch between the two modes (smart/dumb) by turning on/off the physical switch 3 times
+  over <4 seconds interval, or online. It uses MQTT protocol to communicate with the home automation system. (E.g.
   mosquitto MQTT server + OpenHab web server.)
 
   WiFi/MQTT/NTP connections are non-blocking (asynchronous). After rebooting, the switch is in the "dumb" mode, until
@@ -169,26 +170,7 @@ void setup()
 
   // EEPROM stuff:
   EEPROM.begin(EEPROM_SIZE);
-  /*
-    EEPROM.get(ADDR_TMAX, Tmax);
-    if (Tmax.T > 200)
-    {
-      Tmax = { -100, 0, 0, 0, 0, 0};
-      EEPROM.put(ADDR_TMAX, Tmax);
-      EEPROM.put(ADDR_BOOT, (int)0);
-      EEPROM.commit();
-    }
-    else
-    {
-      // Increamenting the booting counter:
-      int N_boot;
-      EEPROM.get(ADDR_BOOT, N_boot);
-      N_boot++;
-      EEPROM.put(ADDR_BOOT, N_boot);
-      EEPROM.commit();
-    }
-  */
-
+ 
 #ifdef INITIALIZE
 #ifdef DEBUG
   Serial.println("Initializing...");
@@ -209,8 +191,8 @@ void setup()
   int T1 = (int)(Tmax.T * 10.0 + 0.5);
   T_int = T1 / 10;
   T_dec = T1 % 10;
-  sprintf(buf, "Tmax=%d.%01d, on %02d/%02d/%d, at %02d:%02d", T_int, T_dec, Tmax.Day, Tmax.Month, Tmax.Year, Tmax.Hour, Tmax.Min);
-  Serial.println(buf);
+  sprintf(tmp, "Tmax=%d.%01d, on %02d/%02d/%d, at %02d:%02d", T_int, T_dec, Tmax.Day, Tmax.Month, Tmax.Year, Tmax.Hour, Tmax.Min);
+  Serial.println(tmp);
   Serial.print("N_boot=");
   Serial.println(N_boot);
   Serial.println("Setup is done");

@@ -48,6 +48,13 @@ void mqtt()
       Serial.println(switch_state);
 #endif
     }
+    if ((mqtt_init || mqtt_refresh || t - t_mqtt > 60000) && knows_time == 1 && Mode == 1)
+      // Sending time left every minute
+    {
+      t_mqtt = t;
+      sprintf(buf, "%02d:%02d (in %02dh%02dm)", hrs_event, min_event, hrs_left, min_left);
+      client.publish(ROOT"/left", buf);
+    }
     mqtt_init = 0;
     mqtt_refresh = 0;
   }

@@ -98,7 +98,6 @@ void setup()
 #ifdef PHYS_SWITCH
   pinMode(SWITCH_PIN, INPUT_PULLUP);
 #endif
-  knows_time = 0;
   WiFi_on = 0;
   MQTT_on = 0;
   // Initially the switch is in Dumb mode:
@@ -139,6 +138,7 @@ void setup()
   local = 0;
   t_a0 = t0;
   t_led1 = t0;
+  t_mqtt = t0;
   sum_T = 0.0;
   i_T = 0;
   bad_temp = 0;
@@ -147,10 +147,12 @@ void setup()
   i_mqtt_T = 0;
   dt_dev = deviation();
   mySunrise.Custom(Z_ANGLE);
+  knows_time = 0;
   redo_times = 1;
-  t_sunrise2 = 0;
-  Hour = 0;
-  Hour_old = 0;
+  t_sunrise_next = 0;
+  t_2_next = 0;
+  Day = 0;
+  Day_old = 0;
   dt_dev = 0;
   switch_count = 0;
   switch_abuse = 0;
@@ -160,13 +162,12 @@ void setup()
   on_hours_old = 0;
   phys_flip = 0;
   mqtt_refresh = 0;
+  hrs_left = 0;
+  min_left = 0;
+  hrs_event = 0;
+  min_event = 0;
 
-  // Time zone rules (see https://github.com/JChristensen/Timezone), this one is for EST (US/Canada)
-//  TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
-//  TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours  
-//  Timezone usEastern(usEDT, usEST);
-  
-// EEPROM stuff:
+  // EEPROM stuff:
   EEPROM.begin(EEPROM_SIZE);
   /*
     EEPROM.get(ADDR_TMAX, Tmax);
@@ -230,10 +231,11 @@ void loop()
   // Establishing and re-establishing WiFi and MQTT connections:
   connections();
 
-  t = millis();
-
   // Get all time parameters (initially, then every 24h)
   get_time();
+
+  // Smart functionality (sunset/sunrise, night time):
+  smart();
 
   // Reading the physical switch state (with debouncing):
   read_switch();
@@ -247,13 +249,10 @@ void loop()
   // Switching the light on or off when needed:
   light();
 
+  // Warning signals with internal LED:
   led();
 
-  switch_state_old = switch_state;
-  light_state_old = light_state;
-  Mode_old = Mode;
-  on_hours_old = on_hours;
-  if (knows_time)
-    Hour_old = Hour;
+  // End of the loop cleanup:
+  cleanup();
 }
 

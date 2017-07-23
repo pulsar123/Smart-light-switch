@@ -13,6 +13,9 @@
   const char* mqtt_server = "xxxx";
   const int TIME_ZONE = xx; // Time zone, hours; negative if west of Greenwich, positive if east; don't use summer/daylight saving time
   Sunrise2 mySunrise(xxx, xxx, TIME_ZONE);  // Your longitude and latutude; the latter is negative if west of Greenwich
+  // Two Timezone library rules to define the switch to summer time, and switch to winter time, e.g. for EST/EDT:
+  TimeChangeRule Summer = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
+  TimeChangeRule Winter = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours
 */
 #include "private.h" //  Make sure you create this file first (see the lines above)
 
@@ -57,19 +60,18 @@
 // Uncomment to use one internal LEDs as WiFi status (the other internal LED will only be used for warning signals)
 //#define WIFI_LED
 
-const long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
-const long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)
-const long DT_NTP = 86400000; // Time interval for NTP time re-syncing, ms
+const unsigned long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
+const unsigned long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)
 const int DARK_RAN = 601; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in seconds; should be odd for symmetry
-const long DT_TH = 100; // raw temperarture measurement interval, ms
+const unsigned long DT_TH = 100; // raw temperarture measurement interval, ms
 const int N_T = 10; // average temperature over this many measurements (so the actual temperature is updated every N_T*DT_TH ms)
 const float T_MAX = 50.0; // Maximum allowed SSR temperature (C); if larger, the SSR will be disabled until reboot time, and LED1 will start slowly flashing
 // Maximum number of physical off-on switching in any given hour; if exceeded, the program goes into a safe mode (smart switch, physical switch ignored - if the time is known;
 // dumb mode, light off - if the time is not known). This is protection against switch reading noise.
 // Also used to protect from hacking (MQTT switching limit per hour)
 const int N_ABUSE = 100;
-const long DT_HEAT = 250; // Number of milliseconds for overheating warning flashings (LED1), for on and off states
-const long DT_ABUSE = 1000; // Number of milliseconds for abuse (mqtt or switch) warning flashings (LED1), for on and off states
+const unsigned long DT_HEAT = 250; // Number of milliseconds for overheating warning flashings (LED1), for on and off states
+const unsigned long DT_ABUSE = 1000; // Number of milliseconds for abuse (mqtt or switch) warning flashings (LED1), for on and off states
 
 // Good years (used to verify if NTP output is sensible). Switch will not work properly if the current year is outside of this range
 const int YEAR_MIN = 2017;
@@ -199,9 +201,7 @@ const int ADDR_BOOT = ADDR_TMAX + sizeof(Tmax_struc); // Booting counter
 WiFiClient espClient;
 PubSubClient client(espClient);
 static WiFiUDP udp;
-unsigned long locarel;
 
-long lastMsg = 0;
 int value = 0;
 byte led0, led1;
 unsigned long t_led1;
@@ -210,7 +210,7 @@ unsigned long t0, t, t_switch;
 char buf[50], State_char;
 byte WiFi_on, MQTT_on;
 byte mode_count;
-unsigned long t_mode, t_ntp, t_sunrise, t_sunset, t_sunrise2, dt_summer;
+unsigned long t_mode, t_ntp, t_sunrise, t_sunset, t_sunrise_next, dt_summer, t_mqtt, t_midnight, t_midnight2;
 byte knows_time, redo_times;
 int dt_rise, dt_set, dt_now, dt_dev, dt_left, hrs_left, min_left, dt_event, hrs_event, min_event;
 int local;
@@ -221,7 +221,7 @@ int i_T, i_mqtt_T;
 byte bad_temp;
 int T_int, T_dec;
 byte mqtt_init;
-int Hour, Hour_old;
+int Day, Day_old;
 int switch_count, mqtt_count;
 byte switch_abuse, mqtt_abuse;
 unsigned long int on_hours, on_hours_old;
@@ -229,10 +229,8 @@ struct Tmax_struc Tmax;
 byte phys_flip;
 byte mqtt_refresh;
 #ifdef INDOORS
-long int t_1, t_2;
+unsigned long int t_1, t_2, t_2_next;
 #endif
 
-  TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
-  TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours  
-  Timezone usEastern(usEDT, usEST);
+Timezone Zone(Summer, Winter);
 

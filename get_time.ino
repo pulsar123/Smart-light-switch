@@ -1,6 +1,10 @@
 void get_time()
 // Compute all time parameters - initially, and then every 24h at 1am (local winter time)
 {
+
+  // Arduino time in ms:
+  t = millis();
+
   // Computing the on-hours based on internal timer:
   on_hours =  t / 3600000;
   // Clearing the abuse counters every on-hour:
@@ -15,17 +19,20 @@ void get_time()
   // Current (local winter time) day:
   if (knows_time)
   {
-    Hour = hour();
-    if (Hour != Hour_old && Hour == 1)
-      // We recalculate time parameters every 24h at 1am local winter time
+    Day = day();
+    if (Day != Day_old)
+    {
+      // We recalculate time parameters every midnight (local winter time)
       redo_times = 1;
+      // Once a day we rest timers (to avoid overflow)
+      t_ntp = t;
+    }
   }
 
   if (WiFi_on && (knows_time == 0 || redo_times == 1) && t >= t_ntp)
   {
     // Local winter time:
     local = ntpUnixTime(udp) + TIME_ZONE * 3600;
-    //    unixTime = usEastern.toLocal(ntpUnixTime(udp));
     unsigned long delta = 0;
     if (knows_time)
       // Deviation of the internal timer from the NTP time:
@@ -74,30 +81,30 @@ void get_time()
   }
 
   if (knows_time == 1 && redo_times == 1)
-    // We can only get to this point if the time is known. We get here initially, and then every local winter time 1am.
+    // We can only get to this point if the time is known. We get here initially, and then every midnight (local winter time).
     // Now we can compute all the time parameters which need to br re-computed daily
   {
     int Month = month();
-    int Day = day();
+    Day = day();
     // Number of minutes from the midnight to sunrise and sunset, for the current date (local winter time):
     dt_rise = mySunrise.Rise(Month, Day); // (month,day) - january=1
     dt_set = mySunrise.Set(Month, Day);
     // Current local winter time:
     local = now();
     // Local winter time corresponding to the last midnight:
-    unsigned long int t_midnight = local - (3600 * hour() + 60 * minute() + second());
+    t_midnight = local - (3600 * hour() + 60 * minute() + second());
     // Sunrise and sunset time (with some random deviation):
-    if (t_sunrise2 == 0)
+    if (t_sunrise_next == 0)
       t_sunrise = t_midnight + 60 * dt_rise + deviation();
     else
       // If this is not the first calculation since reboot, we use the last day's calculation for the sunrise:
-      t_sunrise = t_sunrise2;
+      t_sunrise = t_sunrise_next;
     t_sunset = t_midnight + 60 * dt_set + deviation();
     // We also need to know the next day's sunrise:
     unsigned long int t_next_day = local + 86400;
     int dt_rise2 = mySunrise.Rise(month(t_next_day), day(t_next_day));
-    unsigned long int t_midnight2 = t_midnight + 86400;
-    t_sunrise2 = t_midnight2 + 60 * dt_rise2 + deviation();
+    t_midnight2 = t_midnight + 86400;
+    t_sunrise_next = t_midnight2 + 60 * dt_rise2 + deviation();
 
 #ifdef INDOORS
     // Figuring out when to turn the indoor light off for the night, and on in the morning
@@ -108,10 +115,14 @@ void get_time()
     // +1 second to make T_2B moment inclusive:
     delta = (int)(3600 * (T_2B - T_2A)) + 1;
     // Random moment to turn on the indoor light in the morning (from the T_2A...T_2B interval):
-    t_2 = t_midnight + (int)(3600 * T_2A) + random(delta);
+    if (t_2_next == 0)
+      t_2 = t_midnight + (int)(3600 * T_2A) + random(delta);
+    else
+      // If this is not the first calculation since reboot, we use the last day's calculation for t_2:
+      t_2 = t_2_next;
 #endif
-    // Summer time correction (seconds):
-    if (usEastern.locIsDST(local))
+    // Summer time correction (seconds); needs to be added to the local winter time to make proper (either winter or summer) local time:
+    if (Zone.locIsDST(local))
       dt_summer = 3600;
     else
       dt_summer = 0;

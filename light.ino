@@ -1,5 +1,5 @@
 void light()
-// Operating the SSR (turningg the lights on/off) based on light_state
+// Operating the SSR (turning the lights on/off) based on light_state
 {
   // SSR cannot be controlled if we went over the critical temperature:
   if (bad_temp)

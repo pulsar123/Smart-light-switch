@@ -52,8 +52,6 @@ void read_switch()
         if (Mode == 1 || knows_time)
         {
           Mode = 1 - Mode;
-          if (Mode == 1)
-            instant_check = 1;
 #ifdef DEBUG
           Serial.print("New Mode=");
           Serial.println(Mode);
@@ -67,7 +65,6 @@ void read_switch()
       // Only in Dumb switch mode, light state reflects the physical switch state:
     {
       light_state = switch_state;
-      // !!!! An experiment: trying to make the physical switch much more responsive:
       light();
       phys_flip = 1;
     }

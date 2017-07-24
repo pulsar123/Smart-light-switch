@@ -1,5 +1,7 @@
 void smart()
+// Smart mode stuff. We compute all the smart stuff even while in dumb mode.
 {
+  byte light_state0;
 
   // Local winter time:
   unsigned long int local = now();
@@ -8,10 +10,13 @@ void smart()
   {
     // Dark time criterion:
     if (Mode == 1)
+    {
+      light_state0 = light_state;
       if (local < t_sunrise || local > t_sunset)
         light_state = 1;
       else
         light_state = 0;
+    }
 
     unsigned long int left, event;
     // Finding the next event:
@@ -21,7 +26,7 @@ void smart()
       event = t_sunset;
     else
       event = t_sunrise_next;
-    // How many second left till the next event:
+    // How many seconds left till the next event:
     left = event - local;
 #ifdef INDOORS
     // Turning an interior light off for the night:
@@ -52,6 +57,10 @@ void smart()
       hrs_event = (event + dt_summer - t_midnight2) / 3600;
       min_event = ((event + dt_summer - t_midnight2) % 3600) / 60;
     }
+
+    if (Mode == 1 && light_state != light_state0)
+    // light_state just changed, so we need to update the mqtt time params:
+      mqtt_refresh = 1;
   }
 
   if (bad_temp)

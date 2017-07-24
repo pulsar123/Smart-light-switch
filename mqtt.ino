@@ -31,9 +31,6 @@ void mqtt()
     {
       sprintf(buf, "%d", Mode);
       client.publish(ROOT"/mode", buf);
-      if (Mode == 1)
-        // Just switched to Smart mode, so requesting an instant check inside smart() function
-        instant_check = 1;
 #ifdef DEBUG
       Serial.print("Mode changed: ");
       Serial.println(Mode);

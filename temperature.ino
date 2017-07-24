@@ -8,11 +8,11 @@ void temperature()
 #ifdef TH_PULLUP
     // Thermistor resistance (assuming it is used with a pullup resistor), in Ohms:
     R = R_PULL * (Raw - A0_LOW) / (A0_HIGH - Raw);
-    // Correcting for the weird board artifact - it appears to have an internal pulldown resistor on A0 pin, with R_INETRNAL value:
+    // Correcting for the weird board artifact - it appears to have an internal pulldown resistor on A0 pin, with R_INTERNAL value:
     R = 1.0 / (1.0 / R - 1.0 / R_INTERNAL);
 #else
     // Thermistor resistance (assuming it is used with a pulldown resistor), in Ohms:
-    // Correcting for the weird board artifact - it appears to have an internal pulldown resistor on A0 pin, with R_INETRNAL value:
+    // Correcting for the weird board artifact - it appears to have an internal pulldown resistor on A0 pin, with R_INTERNAL value:
     R = 1.0 / (1.0 / R_INTERNAL + 1.0 / R_PULL) * ((A0_HIGH - 1.0) / (Raw - A0_LOW) - 1.0);
 #endif
     // Temperature (Celsius):

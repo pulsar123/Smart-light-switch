@@ -105,7 +105,6 @@ void setup()
   Mode = 0;
   Mode_old = Mode;
   mode_count = 0;
-  instant_check = 0;
 #ifdef PHYS_SWITCH
   switch_state = 1 - digitalRead(SWITCH_PIN); // reading the current state of the physical switch
   switch_state_old = switch_state;
@@ -114,7 +113,6 @@ void setup()
   light_state = 0;
 #endif
   light_state_old = light_state;
-  //  pinMode(TH_PIN, INPUT);
 #ifdef WIFI_LED
   pinMode(LED0, OUTPUT);     // Initialize the BUILTIN_LED pin as an output (WiFi connection indicator)
 #endif
@@ -122,7 +120,7 @@ void setup()
   delay(10);
   led0 = HIGH;
   led1 = HIGH;
-  digitalWrite(SSR_PIN, switch_state); // Initially the SSR state = physical switch state (dumb mode)
+  digitalWrite(SSR_PIN, light_state); // Initially the SSR state = physical switch state (dumb mode)
 #ifdef WIFI_LED
   digitalWrite(LED0, led0);
 #endif
@@ -146,7 +144,7 @@ void setup()
   T_avr = 0;
   mqtt_init = 1;
   i_mqtt_T = 0;
-  dt_dev = deviation();
+  // Initializing the Sunrise library, for a custom sun angle Z_ANGLE (from config.h)
   mySunrise.Custom(Z_ANGLE);
   knows_time = 0;
   redo_times = 1;
@@ -154,7 +152,6 @@ void setup()
   t_2_next = 0;
   Day = 0;
   Day_old = 0;
-  dt_dev = 0;
   switch_count = 0;
   switch_abuse = 0;
   mqtt_count = 0;

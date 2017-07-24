@@ -1,5 +1,5 @@
 void get_time()
-// Compute all time parameters - initially, and then every 24h at 1am (local winter time)
+// Compute all time parameters
 {
 
   // Arduino time in ms:
@@ -16,15 +16,15 @@ void get_time()
       mqtt_count = 0;
   }
 
-  // Current (local winter time) day:
   if (knows_time)
   {
+    // Current (local winter time) day:
     Day = day();
     if (Day != Day_old)
     {
       // We recalculate time parameters every midnight (local winter time)
       redo_times = 1;
-      // Once a day we rest timers (to avoid overflow)
+      // Once a day we reset timer (to avoid overflow)
       t_ntp = t;
     }
   }
@@ -33,7 +33,7 @@ void get_time()
   {
     // Local winter time:
     local = ntpUnixTime(udp) + TIME_ZONE * 3600;
-    unsigned long delta = 0;
+    long delta = 0;
     if (knows_time)
       // Deviation of the internal timer from the NTP time:
       delta = now() - local;
@@ -86,7 +86,7 @@ void get_time()
 
   if (knows_time == 1 && redo_times == 1)
     // We can only get to this point if the time is known. We get here initially, and then every midnight (local winter time).
-    // Now we can compute all the time parameters which need to br re-computed daily
+    // Now we can compute all the time parameters which need to be re-computed daily
   {
     int Month = month();
     Day = day();

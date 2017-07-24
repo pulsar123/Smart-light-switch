@@ -7,7 +7,7 @@
 */
 #define N_SWITCH 3
 
-/* Personal info (place the following 5 lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
+/* Personal info (place the following lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
   const char* ssid = "xxx";
   const char* password = "xxxx";
   const char* mqtt_server = "xxxx";
@@ -35,12 +35,12 @@
   ROOT"/mode"    : the mode (0: dumb; 1: smart);
   ROOT"/light_state"   : the light's state (on/off);
   ROOT"/switch_state"  : the physical switch's state (on/off)
-  ROOT"/left"    : hours:minutes left before the next smart flip
+  ROOT"/left"    : hours:minutes for the time of the next smart flip, and hours:minutes left before the next smart flip
   ROOT"/alarm"   : 1 if exceeded the critical temperature on SSR, 2 for MQTT abuse, 3 for phys. switch abuse, 0 otherwise
   ROOT"/temp"    : current / historically maximum SSR temperature in C
 
   For the "openhab/start" thing to work, one needs to have the OpenHab to publish "1" (followed by "0") in this topic at startup.
-  Under Windows this can be accomplished by adding this line before the last line of openhab.bat file:
+  Under Windows this can be accomplished by adding this line before the last line of openhab's start.bat file:
 
   start /b C:\openHAB2\mqtt_start.bat >nul
 
@@ -65,7 +65,7 @@ const unsigned long DT_MODE = 4000; // Number of ms for reading the Mode flippin
 const int DARK_RAN = 601; // (DARK_RAN-1)/2 is the maximum deviation of the random smart light on/off from actual sunset/sunrise times, in seconds; should be odd for symmetry
 const unsigned long DT_TH = 100; // raw temperarture measurement interval, ms
 const int N_T = 10; // average temperature over this many measurements (so the actual temperature is updated every N_T*DT_TH ms)
-const float T_MAX = 50.0; // Maximum allowed SSR temperature (C); if larger, the SSR will be disabled until reboot time, and LED1 will start slowly flashing
+const float T_MAX = 60.0; // Maximum allowed SSR temperature (C); if larger, the SSR will be disabled until reboot time, and LED1 will start slowly flashing
 // Maximum number of physical off-on switching in any given hour; if exceeded, the program goes into a safe mode (smart switch, physical switch ignored - if the time is known;
 // dumb mode, light off - if the time is not known). This is protection against switch reading noise.
 // Also used to protect from hacking (MQTT switching limit per hour)
@@ -75,7 +75,7 @@ const unsigned long DT_ABUSE = 1000; // Number of milliseconds for abuse (mqtt o
 
 // Good years (used to verify if NTP output is sensible). Switch will not work properly if the current year is outside of this range
 const int YEAR_MIN = 2017;
-const int YEAR_MAX = 2037;
+const int YEAR_MAX = 2047;
 const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the internal timer by more than this value (in seconds), ignore the new NTP time
 
 
@@ -86,11 +86,11 @@ const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the in
 #define PHYS_SWITCH
 // Uncomment if the lights are indoors. This will turn off the lights during the night. The lights will be on in the evening (after sunset) and morning (before sunrise).
 //#define INDOORS
-// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock; local time):
+// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock; local time; between 0 and 24h):
 // (Only matters if INDOORS is defined above)
 const float T_1A = 0;
 const float T_1B = 0;
-// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
+// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock; local time; between 0 and 24h):
 // (Only matters if INDOORS is defined above)
 const float T_2A = 0;
 const float T_2B = 0;
@@ -122,7 +122,6 @@ const int A0_LOW = 1;
 
 //----------------------------------------- Switch 2 (Back light) ------------------------------------------
 #elif N_SWITCH == 2
-//ADC_MODE(ADC_TOUT_3V3);
 #define PHYS_SWITCH
 //#define INDOORS
 const float T_1A = 0;
@@ -142,12 +141,8 @@ const int A0_LOW = 0;
 #elif N_SWITCH == 3
 //#define PHYS_SWITCH
 #define INDOORS
-// The light will be switched off for the night at a random time between T_1A and T_1B (in hours; 24-hours clock):
-// (Only matters if INDOORS is defined above)
 const float T_1A = 22.5;
 const float T_1B = 23.0;
-// The light will be switched on in the morning at a random time between T_2A and T_2B (in hours; 24-hours clock):
-// (Only matters if INDOORS is defined above)
 const float T_2A = 6.5;
 const float T_2B = 7.0;
 const float Z_ANGLE = 1;
@@ -158,6 +153,7 @@ const float TH_A = 3.503602e-04;
 const float TH_B = 2.771397e-04;
 const int A0_HIGH = 996;
 const int A0_LOW = 0;
+
 #endif
 //----------------------------------------------------------------------------------------------------------
 
@@ -181,7 +177,7 @@ const byte LED1 = 2; // D4
 //+++++++++++++++++++++++++++++ Normally nothing should be changed below ++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-// Structure used to store the historically maximum temperature and the corresponding date/time in EEPROM:
+// Structure used to store the historically maximum temperature and the corresponding date/time (local winter time) in EEPROM:
 struct Tmax_struc
 {
   float T;
@@ -215,9 +211,8 @@ byte WiFi_on, MQTT_on;
 byte mode_count;
 unsigned long t_mode, t_ntp, t_sunrise, t_sunset, t_sunrise_next, dt_summer, t_mqtt, t_midnight, t_midnight2;
 byte knows_time, redo_times;
-int dt_rise, dt_set, dt_now, dt_dev, dt_left, hrs_left, min_left, dt_event, hrs_event, min_event;
+int dt_rise, dt_set, dt_now, dt_left, hrs_left, min_left, dt_event, hrs_event, min_event;
 int local;
-byte instant_check;
 unsigned long t_a0;
 float sum_T, T_avr;
 int i_T, i_mqtt_T;

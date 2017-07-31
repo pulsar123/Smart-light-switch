@@ -56,7 +56,7 @@
 // Then comment it out again and upload the code one more time, for the actual functionality
 //#define INITIALIZE
 // Only for debugging (will use Serial interface to print messages):
-#define DEBUG
+//#define DEBUG
 // Uncomment to use one internal LEDs as WiFi status (the other internal LED will only be used for warning signals)
 //#define WIFI_LED
 
@@ -141,8 +141,8 @@ const int A0_LOW = 0;
 #elif N_SWITCH == 3
 //#define PHYS_SWITCH
 #define INDOORS
-const float T_1A = 22.5;
-const float T_1B = 23.0;
+const float T_1A = 23.0;
+const float T_1B = 23.3;
 const float T_2A = 6.5;
 const float T_2B = 7.0;
 const float Z_ANGLE = 1;

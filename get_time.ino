@@ -114,31 +114,32 @@ void get_time()
     Serial.println(tmp);
 #endif
 
-#ifdef INDOORS
-    // Figuring out when to turn the indoor light off for the night, and on in the morning
-    // +1 second to make T_1B moment inclusive:
-    int delta = (int)(3600 * (T_1B - T_1A)) + 1;
-    // Random moment to turn off the indoor light in the evening (from the T_1A...T_1B interval):
-    t_1 = t_midnight + (int)(3600 * T_1A) + random(delta);
-    // +1 second to make T_2B moment inclusive:
-    delta = (int)(3600 * (T_2B - T_2A)) + 1;
-    // Random moment to turn on the indoor light in the morning (from the T_2A...T_2B interval):
-    if (t_2_next == 0)
-      t_2 = t_midnight + (int)(3600 * T_2A) + random(delta);
-    else
-      // If this is not the first calculation since reboot, we use the last day's calculation for t_2:
-      t_2 = t_2_next;
-    t_2_next = t_midnight2 + (int)(3600 * T_2A) + random(delta);
-#ifdef DEBUG
-    sprintf(tmp, "t_2=%d, t_1=%d, t_2_next=%d", t_2, t_1, t_2_next);
-    Serial.println(tmp);
-#endif
-#endif
     // Summer time correction (seconds); needs to be added to the local winter time to make proper (either winter or summer) local time:
     if (Zone.locIsDST(local))
       dt_summer = 3600;
     else
       dt_summer = 0;
+
+#ifdef INDOORS
+    // Figuring out when to turn the indoor light off for the night, and on in the morning
+    // +1 second to make T_1B moment inclusive:
+    int delta = (int)(3600 * (T_1B - T_1A)) + 1;
+    // Random moment to turn off the indoor light in the evening (from the T_1A...T_1B interval):
+    t_1 = t_midnight + (int)(3600 * T_1A) - dt_summer + random(delta);
+    // +1 second to make T_2B moment inclusive:
+    delta = (int)(3600 * (T_2B - T_2A)) + 1;
+    // Random moment to turn on the indoor light in the morning (from the T_2A...T_2B interval):
+    if (t_2_next == 0)
+      t_2 = t_midnight + (int)(3600 * T_2A) - dt_summer + random(delta);
+    else
+      // If this is not the first calculation since reboot, we use the last day's calculation for t_2:
+      t_2 = t_2_next;
+    t_2_next = t_midnight2 + (int)(3600 * T_2A) - dt_summer + random(delta);
+#ifdef DEBUG
+    sprintf(tmp, "t_2=%d, t_1=%d, t_2_next=%d", t_2, t_1, t_2_next);
+    Serial.println(tmp);
+#endif
+#endif
 
     redo_times = 0;
   }

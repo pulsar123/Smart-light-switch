@@ -29,6 +29,7 @@ void smart()
     // How many seconds left till the next event:
     left = event - local;
 #ifdef INDOORS
+//!!! Bug: should skip morning events when light doesn't turn on in the morning (t_sunrise_next < t_2_next)
     // Turning an interior light off for the night:
     if (Mode == 1)
       if (local > t_1 || local < t_2)

@@ -52,6 +52,11 @@
   the corresponding functionality is disabled, and the code switches to smart mode (if time is known), or dumb mode with the light turned off (if time is not known).
   Also, LED1 starts flashing (slowly). To recover from this mode one needs to power cycle the controller.
 
+  I now added support for operating a light switch mechanically, via a servo like 9G (new SERVO, SERVO_ON, SERVO_OFF parameters). You should connect the servo's control wire
+  (usually orange) to SWITCH_PIN, +5V wire (usually red) to the +5V pin on ESP board, and ground wire (usually brown) to the Gnd pin on ESP. PHYS_SWITCH cannot be used in SERVO
+  mode. Temperature is undefined (as it's not needed). INVERT is ignored. The tuning is done by adjusting the servo angle values for ON and OFF positions (with constants
+  SERVO_ON and SERVO_OFF), and also SERVO_DELAY_MS (delay in ms after each servo operation - default 1000 ms should be fine.)
+
   You will have to adjust many parameters in config.h to your specific setup.
 
   To install the ESP8266 board, (using Arduino 1.6.4+):
@@ -84,8 +89,8 @@
 #include <Timezone.h>
 #include <EEPROM.h>
 #include "Sunrise2.h"
+#include <Servo.h> 
 #include "config.h"
-
 
 //++++++++++++++++++++++++++ SETUP +++++++++++++++++++++++++++++++++++
 
@@ -98,6 +103,13 @@ void setup()
   pinMode(SSR_PIN, OUTPUT);
 #ifdef PHYS_SWITCH
   pinMode(SWITCH_PIN, INPUT_PULLUP);
+#endif
+#ifdef SERVO
+//  Servo1.attach(SWITCH_PIN); 
+  // Initial servo state = light off?:
+//  light_state = 0;
+//  Servo1.write(SERVO_OFF); 
+//  delay(SERVO_DELAY_MS);
 #endif
   WiFi_on = 0;
   MQTT_on = 0;
@@ -112,7 +124,11 @@ void setup()
 #else
   light_state = 0;
 #endif
-  light_state_old = light_state;
+#ifdef SERVO
+  light_state_old = 1 - light_state;  
+#else
+  light_state_old = light_state;  
+#endif  
 #ifdef WIFI_LED
   pinMode(LED0, OUTPUT);     // Initialize the BUILTIN_LED pin as an output (WiFi connection indicator)
 #endif
@@ -120,7 +136,11 @@ void setup()
   delay(10);
   led0 = HIGH;
   led1 = HIGH;
+#ifdef INVERT
+  digitalWrite(SSR_PIN, 1-light_state); // Initially the SSR state = physical switch state (dumb mode)
+#else  
   digitalWrite(SSR_PIN, light_state); // Initially the SSR state = physical switch state (dumb mode)
+#endif  
 #ifdef WIFI_LED
   digitalWrite(LED0, led0);
 #endif
@@ -149,7 +169,9 @@ void setup()
   knows_time = 0;
   redo_times = 1;
   t_sunrise_next = 0;
+#ifdef INDOORS  
   t_2_next = 0;
+#endif  
   Day = 0;
   Day_old = 0;
   switch_count = 0;

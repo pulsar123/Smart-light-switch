@@ -1,6 +1,11 @@
 void temperature()
 // Measuring the SSR's temperature, and disabling it if it's too hot
 {
+  // Not measuring temperature in servo mode:
+#ifdef SERVO
+  return;
+#endif
+  
   if (t - t_a0 > DT_TH)
   {
     float Raw = (float)analogRead(TH_PIN);
@@ -34,7 +39,11 @@ void temperature()
       {
         bad_temp = 1;
         light_state = 0;
+#ifdef INVERT
+        digitalWrite(SSR_PIN, HIGH);
+#else
         digitalWrite(SSR_PIN, LOW);
+#endif        
 #ifdef DEBUG
         Serial.println("T>T_MAX! Disabling SSR");
 #endif

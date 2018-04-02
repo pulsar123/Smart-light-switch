@@ -5,7 +5,7 @@
    4: 2nd floor
    ...
 */
-#define N_SWITCH 3
+#define N_SWITCH 4
 
 /* Personal info (place the following lines in a separate file, private.h, uncomment all the lines, and replace xxxx with your personal details):
   const char* ssid = "xxx";
@@ -58,7 +58,7 @@
 // Only for debugging (will use Serial interface to print messages):
 //#define DEBUG
 // Uncomment to use one internal LEDs as WiFi status (the other internal LED will only be used for warning signals)
-//#define WIFI_LED
+#define WIFI_LED
 
 const unsigned long DT_DEBOUNCE = 100; // Physical switch debounce time in ms
 const unsigned long DT_MODE = 4000; // Number of ms for reading the Mode flipping signal (three off->on physical switch operations in a row)
@@ -78,6 +78,22 @@ const int YEAR_MIN = 2017;
 const int YEAR_MAX = 2047;
 const unsigned long MAX_DELTA = 600; // If the new NTP time deviates from the internal timer by more than this value (in seconds), ignore the new NTP time
 
+
+// Pins used (NodeMCU devkit v0.9; e.g. http://www.ebay.ca/itm/272526162060)
+// (See http://cdn.frightanic.com/blog/wp-content/uploads/2015/09/esp8266-nodemcu-dev-kit-v1-pins.png for NodeMCU devkit v0.9 pinout)
+// Pin used to read the state of the physical switch (make sure to use an external 3.3k pullup resistor, to suppress reading noise)
+// (In SERVO mode, this pin is used to control the servo)
+const byte SWITCH_PIN = 5;  // D1
+// Pin to operate solid state relay (SSR):
+const byte SSR_PIN = 4; // D2
+// Analogue pin for thermistor:
+const byte TH_PIN = A0;
+// Internal pins (do not connect anything there):
+// Internal LED pin is used to indicate when connected to WiFi:
+const byte LED0 = BUILTIN_LED;  // D0
+// Internal LED for warning signal (overheating: fast flashing; abuse: slow flashing)
+const byte LED1 = 2; // D4
+const int SERVO_DELAY_MS = 1000; // Delay in ms after each servo operation
 
 // Custom profiles for different switches:
 //----------------------------------------- Switch 1 (Front light) ------------------------------------------
@@ -141,9 +157,9 @@ const int A0_LOW = 0;
 #elif N_SWITCH == 3
 //#define PHYS_SWITCH
 #define INDOORS
-const float T_1A = 23.0;
-const float T_1B = 23.3;
-const float T_2A = 6.5;
+const float T_1A = 22.8;
+const float T_1B = 23.1;
+const float T_2A = 6.75;
 const float T_2B = 7.0;
 const float Z_ANGLE = 1;
 #define TH_PULLUP
@@ -154,25 +170,32 @@ const float TH_B = 2.771397e-04;
 const int A0_HIGH = 996;
 const int A0_LOW = 0;
 
+//----------------------------------------- Switch 4 (2nd floor) ------------------------------------------
+#elif N_SWITCH == 4
+//#define PHYS_SWITCH
+#define INDOORS
+// Using servo to flip the physical light switch (instead of SSR); servo is controlled via :
+#define SERVO
+// Servo angles for ON and OFF positions:
+const int SERVO_ON = 133;
+const int SERVO_OFF = 65;
+// Inverting the SSR pin value (when used via an optocoupler):
+//#define INVERT
+const float T_1A = 23.2;
+const float T_1B = 23.5;
+const float T_2A = 6.5;
+const float T_2B = 6.75;
+const float Z_ANGLE = 3;
+#define TH_PULLUP
+const float R_PULL = 45900;
+const float R_INTERNAL = 320000;
+const float TH_A = 3.503602e-04;
+const float TH_B = 2.771397e-04;
+const int A0_HIGH = 995;
+const int A0_LOW = 1;
+
 #endif
 //----------------------------------------------------------------------------------------------------------
-
-
-// Pins used (NodeMCU devkit v0.9; e.g. http://www.ebay.ca/itm/272526162060)
-// (See http://cdn.frightanic.com/blog/wp-content/uploads/2015/09/esp8266-nodemcu-dev-kit-v1-pins.png for NodeMCU devkit v0.9 pinout)
-// Pin used to read the state of the physical switch (make sure to use an external 3.3k pullup resistor, to suppress reading noise):
-const byte SWITCH_PIN = 5;  // D1
-// Pin to operate solid state relay (SSR):
-const byte SSR_PIN = 4; // D2
-// Analogue pin for thermistor:
-const byte TH_PIN = A0;
-// Internal pins (do not connect anything there):
-// Internal LED pin is used to indicate when connected to WiFi:
-const byte LED0 = BUILTIN_LED;  // D0
-// Internal LED for warning signal (overheating: fast flashing; abuse: slow flashing)
-const byte LED1 = 2; // D4
-
-
 
 //+++++++++++++++++++++++++++++ Normally nothing should be changed below ++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -229,6 +252,8 @@ byte mqtt_refresh;
 #ifdef INDOORS
 unsigned long int t_1, t_2, t_2_next;
 #endif
-
+#ifdef SERVO
+Servo Servo1; 
+#endif
 Timezone Zone(Summer, Winter);
 
